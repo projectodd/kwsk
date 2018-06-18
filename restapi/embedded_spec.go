@@ -1375,6 +1375,7 @@ func init() {
           "enum": [
             "nodejs:6",
             "nodejs:8",
+            "nodejs:default",
             "python:2",
             "python:3",
             "swift:3.1.1",
@@ -3644,6 +3645,7 @@ func init() {
           "enum": [
             "nodejs:6",
             "nodejs:8",
+            "nodejs:default",
             "python:2",
             "python:3",
             "swift:3.1.1",

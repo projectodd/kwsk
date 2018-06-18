@@ -30,7 +30,7 @@ type ActionExec struct {
 
 	// the type of action
 	// Required: true
-	// Enum: [nodejs:6 nodejs:8 python:2 python:3 swift:3.1.1 java blackbox]
+	// Enum: [nodejs:6 nodejs:8 nodejs:default python:2 python:3 swift:3.1.1 java blackbox]
 	Kind *string `json:"kind"`
 }
 
@@ -52,7 +52,7 @@ var actionExecTypeKindPropEnum []interface{}
 
 func init() {
 	var res []string
-	if err := json.Unmarshal([]byte(`["nodejs:6","nodejs:8","python:2","python:3","swift:3.1.1","java","blackbox"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["nodejs:6","nodejs:8","nodejs:default","python:2","python:3","swift:3.1.1","java","blackbox"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {
@@ -67,6 +67,9 @@ const (
 
 	// ActionExecKindNodejs8 captures enum value "nodejs:8"
 	ActionExecKindNodejs8 string = "nodejs:8"
+
+	// ActionExecKindNodejsDefault captures enum value "nodejs:default"
+	ActionExecKindNodejsDefault string = "nodejs:default"
 
 	// ActionExecKindPython2 captures enum value "python:2"
 	ActionExecKindPython2 string = "python:2"
