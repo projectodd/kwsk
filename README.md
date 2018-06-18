@@ -17,6 +17,13 @@ No automated testing yet, but you can hit the thing via curl like:
 
     curl http://127.0.0.1:8080/api/v1/namespaces/foo/actions
 
+Or via the `wsk` CLI like:
+
+    wsk property set --apihost "http://127.0.0.1:8080"
+    wsk list
+    wsk action create hello hello.js
+    wsk action get hello
+
 ## Implementing the server
 
 The server just contains a but of stubs and unimplemented code right
