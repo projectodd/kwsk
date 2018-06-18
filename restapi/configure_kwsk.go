@@ -62,7 +62,7 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 		return middleware.NotImplemented("operation triggers.FireTrigger has not yet been implemented")
 	})
 	api.ActionsGetActionByNameHandler = actions.GetActionByNameHandlerFunc(func(params actions.GetActionByNameParams) middleware.Responder {
-        return actions.NewGetActionByNameOK()
+		return actions.NewGetActionByNameOK()
 	})
 	api.ActivationsGetActivationByIDHandler = activations.GetActivationByIDHandlerFunc(func(params activations.GetActivationByIDParams) middleware.Responder {
 		return middleware.NotImplemented("operation activations.GetActivationByID has not yet been implemented")
@@ -71,19 +71,19 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 		return middleware.NotImplemented("operation activations.GetActivations has not yet been implemented")
 	})
 	api.PackagesGetAlPackagesHandler = packages.GetAlPackagesHandlerFunc(func(params packages.GetAlPackagesParams) middleware.Responder {
-        return packages.NewGetAlPackagesOK()
+		return packages.NewGetAlPackagesOK()
 	})
 	api.ActionsGetAllActionsHandler = actions.GetAllActionsHandlerFunc(func(params actions.GetAllActionsParams) middleware.Responder {
-        return actions.NewGetAllActionsOK()
+		return actions.NewGetAllActionsOK()
 	})
 	api.NamespacesGetAllNamespacesHandler = namespaces.GetAllNamespacesHandlerFunc(func(params namespaces.GetAllNamespacesParams) middleware.Responder {
 		return middleware.NotImplemented("operation namespaces.GetAllNamespaces has not yet been implemented")
 	})
 	api.RulesGetAllRulesHandler = rules.GetAllRulesHandlerFunc(func(params rules.GetAllRulesParams) middleware.Responder {
-        return rules.NewGetAllRulesOK()
+		return rules.NewGetAllRulesOK()
 	})
 	api.TriggersGetAllTriggersHandler = triggers.GetAllTriggersHandlerFunc(func(params triggers.GetAllTriggersParams) middleware.Responder {
-        return triggers.NewGetAllTriggersOK()
+		return triggers.NewGetAllTriggersOK()
 	})
 	api.PackagesGetPackageByNameHandler = packages.GetPackageByNameHandlerFunc(func(params packages.GetPackageByNameParams) middleware.Responder {
 		return middleware.NotImplemented("operation packages.GetPackageByName has not yet been implemented")
@@ -101,7 +101,7 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 		return middleware.NotImplemented("operation rules.SetState has not yet been implemented")
 	})
 	api.ActionsUpdateActionHandler = actions.UpdateActionHandlerFunc(func(params actions.UpdateActionParams) middleware.Responder {
-        return actions.NewUpdateActionOK()
+		return actions.NewUpdateActionOK()
 	})
 	api.PackagesUpdatePackageHandler = packages.UpdatePackageHandlerFunc(func(params packages.UpdatePackageParams) middleware.Responder {
 		return middleware.NotImplemented("operation packages.UpdatePackage has not yet been implemented")
