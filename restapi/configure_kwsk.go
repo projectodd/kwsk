@@ -4,6 +4,7 @@ package restapi
 
 import (
 	"crypto/tls"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
 	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/swag"
 	graceful "github.com/tylerb/graceful"
 
 	"github.com/projectodd/kwsk/restapi/operations"
@@ -20,6 +22,7 @@ import (
 	"github.com/projectodd/kwsk/restapi/operations/rules"
 	"github.com/projectodd/kwsk/restapi/operations/triggers"
 
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	knative "github.com/knative/serving/pkg/client/clientset/versioned"
@@ -27,8 +30,18 @@ import (
 
 //go:generate swagger generate server --target .. --name Kwsk --spec ../../../../../../openwhisk/core/controller/build/resources/main/apiv1swagger.json --principal models.Principal
 
+var kwskFlags = struct {
+	Master     string `long:"master" description:"Kubernetes Master URL"`
+	Kubeconfig string `long:"kubeconfig" description:"Absolute path to the kubeconfig"`
+}{}
+
 func configureFlags(api *operations.KwskAPI) {
-	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
+	api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{
+		swag.CommandLineOptionsGroup{
+			ShortDescription: "Kubernetes Options",
+			Options:          &kwskFlags,
+		},
+	}
 }
 
 func configureAPI(api *operations.KwskAPI) http.Handler {
@@ -45,7 +58,11 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	knativeClient := knativeClient()
+	knativeClient, err := knativeClient()
+	if err != nil {
+		log.Fatalf("Error creating Knative client: %s\n", err.Error())
+	}
+
 	configureActions(api, knativeClient)
 
 	// TODO: This is super messy. Separate out all these generated
@@ -138,26 +155,34 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	return handler
 }
 
-func knativeClient() *knative.Clientset {
+func knativeClient() (*knative.Clientset, error) {
 	var kubeconfig string
-	if home := homeDir(); home != "" {
+	if kwskFlags.Kubeconfig != "" {
+		kubeconfig = kwskFlags.Kubeconfig
+	} else if home := homeDir(); home != "" {
 		kubeconfig = filepath.Join(home, ".kube", "config")
 	} else {
 		kubeconfig = ""
 	}
 
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	var config *rest.Config
+	var err error
+	if kwskFlags.Master == "" && kwskFlags.Kubeconfig == "" && os.Getenv("KUBERNETES_SERVICE_HOST") != "" {
+		config, err = rest.InClusterConfig()
+	} else {
+		// use the current context in kubeconfig
+		config, err = clientcmd.BuildConfigFromFlags(kwskFlags.Master, kubeconfig)
+	}
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
 	knativeClient, err := knative.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
-	return knativeClient
+	return knativeClient, nil
 }
 
 func homeDir() string {
