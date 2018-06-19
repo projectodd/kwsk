@@ -22,6 +22,7 @@ import (
 	"github.com/projectodd/kwsk/restapi/operations/rules"
 	"github.com/projectodd/kwsk/restapi/operations/triggers"
 
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
