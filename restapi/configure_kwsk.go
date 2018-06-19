@@ -4,7 +4,10 @@ package restapi
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
@@ -18,6 +21,11 @@ import (
 	"github.com/projectodd/kwsk/restapi/operations/packages"
 	"github.com/projectodd/kwsk/restapi/operations/rules"
 	"github.com/projectodd/kwsk/restapi/operations/triggers"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/clientcmd"
+
+	knative "github.com/knative/serving/pkg/client/clientset/versioned"
 )
 
 //go:generate swagger generate server --target .. --name Kwsk --spec ../../../../../../openwhisk/core/controller/build/resources/main/apiv1swagger.json --principal models.Principal
@@ -39,6 +47,11 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 	api.JSONConsumer = runtime.JSONConsumer()
 
 	api.JSONProducer = runtime.JSONProducer()
+
+	knativeClient := knativeClient()
+
+	// TODO: This is super messy. Separate out all these generated
+	// handlers by type at a minimum
 
 	api.ActivationsGetNamespacesNamespaceActivationsActivationidLogsHandler = activations.GetNamespacesNamespaceActivationsActivationidLogsHandlerFunc(func(params activations.GetNamespacesNamespaceActivationsActivationidLogsParams) middleware.Responder {
 		return middleware.NotImplemented("operation activations.GetNamespacesNamespaceActivationsActivationidLogs has not yet been implemented")
@@ -74,6 +87,14 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 		return packages.NewGetAlPackagesOK()
 	})
 	api.ActionsGetAllActionsHandler = actions.GetAllActionsHandlerFunc(func(params actions.GetAllActionsParams) middleware.Responder {
+		// TODO: This is just stubbed in here to show an example of
+		// fetching knative CRDs. The namespace should definitely not
+		// be hardcoded, for example.
+		configs, err := knativeClient.ServingV1alpha1().Configurations("default").List(metav1.ListOptions{})
+		if err != nil {
+			panic(err.Error())
+		}
+		fmt.Printf("There are %d configs in the cluster\n", len(configs.Items))
 		return actions.NewGetAllActionsOK()
 	})
 	api.NamespacesGetAllNamespacesHandler = namespaces.GetAllNamespacesHandlerFunc(func(params namespaces.GetAllNamespacesParams) middleware.Responder {
@@ -140,4 +161,33 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	return handler
+}
+
+func knativeClient() *knative.Clientset {
+	var kubeconfig string
+	if home := homeDir(); home != "" {
+		kubeconfig = filepath.Join(home, ".kube", "config")
+	} else {
+		kubeconfig = ""
+	}
+
+	// use the current context in kubeconfig
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	knativeClient, err := knative.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return knativeClient
+}
+
+func homeDir() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return h
+	}
+	return os.Getenv("USERPROFILE") // windows
 }
