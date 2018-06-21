@@ -24,9 +24,7 @@ func configureActions(api *operations.KwskAPI, knativeClient *knative.Clientset)
 
 	api.ActionsGetAllActionsHandler = actions.GetAllActionsHandlerFunc(getAllActionsFunc(knativeClient))
 
-	api.ActionsInvokeActionHandler = actions.InvokeActionHandlerFunc(func(params actions.InvokeActionParams) middleware.Responder {
-		return middleware.NotImplemented("operation actions.InvokeAction has not yet been implemented")
-	})
+	api.ActionsInvokeActionHandler = actions.InvokeActionHandlerFunc(invokeActionFunc(knativeClient))
 
 	api.ActionsUpdateActionHandler = actions.UpdateActionHandlerFunc(updateActionFunc(knativeClient))
 }
@@ -148,6 +146,16 @@ func getAllActionsFunc(knativeClient *knative.Clientset) actions.GetAllActionsHa
 			}
 		}
 		return actions.NewGetAllActionsOK().WithPayload(payload)
+	}
+}
+
+func invokeActionFunc(knativeClient *knative.Clientset) actions.InvokeActionHandlerFunc {
+	return func(params actions.InvokeActionParams) middleware.Responder {
+		activationId := "fake-activation"
+		activation := &models.Activation{
+			ActivationID: &activationId,
+		}
+		return actions.NewInvokeActionOK().WithPayload(activation)
 	}
 }
 

@@ -26,6 +26,7 @@ Or via the `wsk` CLI like:
     wsk action get hello
     wsk action create hello-container --docker busybox
     wsk action get hello-container
+    wsk action invoke hello
 
 ## Implementing the server
 
