@@ -328,7 +328,7 @@
                         "name": "payload",
                         "in": "body",
                         "description": "The parameters for the action being invoked",
-                        "required": true,
+                        "required": false,
                         "schema": {
                             "$ref": "#/definitions/KeyValue"
                         }

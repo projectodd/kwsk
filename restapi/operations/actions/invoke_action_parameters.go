@@ -6,7 +6,6 @@ package actions
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"io"
 	"net/http"
 
 	"github.com/go-openapi/errors"
@@ -51,7 +50,6 @@ type InvokeActionParams struct {
 	*/
 	Namespace string
 	/*The parameters for the action being invoked
-	  Required: true
 	  In: body
 	*/
 	Payload *models.KeyValue
@@ -95,11 +93,7 @@ func (o *InvokeActionParams) BindRequest(r *http.Request, route *middleware.Matc
 		defer r.Body.Close()
 		var body models.KeyValue
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			if err == io.EOF {
-				res = append(res, errors.Required("payload", "body"))
-			} else {
-				res = append(res, errors.NewParseError("payload", "body", "", err))
-			}
+			res = append(res, errors.NewParseError("payload", "body", "", err))
 		} else {
 
 			// validate body object
@@ -111,8 +105,6 @@ func (o *InvokeActionParams) BindRequest(r *http.Request, route *middleware.Matc
 				o.Payload = &body
 			}
 		}
-	} else {
-		res = append(res, errors.Required("payload", "body"))
 	}
 	qResult, qhkResult, _ := qs.GetOK("result")
 	if err := o.bindResult(qResult, qhkResult, route.Formats); err != nil {

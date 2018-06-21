@@ -282,7 +282,6 @@ func init() {
             "description": "The parameters for the action being invoked",
             "name": "payload",
             "in": "body",
-            "required": true,
             "schema": {
               "$ref": "#/definitions/KeyValue"
             }
@@ -2351,7 +2350,6 @@ func init() {
             "description": "The parameters for the action being invoked",
             "name": "payload",
             "in": "body",
-            "required": true,
             "schema": {
               "$ref": "#/definitions/KeyValue"
             }
