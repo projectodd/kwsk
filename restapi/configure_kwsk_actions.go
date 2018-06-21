@@ -56,6 +56,7 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		annotations := make(map[string]string)
 		annotations["kwsk_action_version"] = params.Action.Version
 		annotations["kwsk_action_kind"] = *params.Action.Exec.Kind
+		annotations["kwsk_action_code"] = params.Action.Exec.Code
 
 		container := corev1.Container{
 			Image: params.Action.Exec.Image,
@@ -109,6 +110,7 @@ func getActionByNameFunc(knativeClient *knative.Clientset) actions.GetActionByNa
 		objectMeta := config.ObjectMeta
 		kind := objectMeta.Annotations["kwsk_action_kind"]
 		version := objectMeta.Annotations["kwsk_action_version"]
+		code := objectMeta.Annotations["kwsk_action_code"]
 		payload := &models.Action{
 			Name:      &objectMeta.Name,
 			Namespace: &objectMeta.Namespace,
@@ -116,6 +118,7 @@ func getActionByNameFunc(knativeClient *knative.Clientset) actions.GetActionByNa
 			Exec: &models.ActionExec{
 				Image: config.Spec.RevisionTemplate.Spec.Container.Image,
 				Kind:  &kind,
+				Code:  code,
 			},
 		}
 		return actions.NewGetActionByNameOK().WithPayload(payload)

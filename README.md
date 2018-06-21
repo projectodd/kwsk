@@ -20,9 +20,12 @@ No automated testing yet, but you can hit the thing via curl like:
 Or via the `wsk` CLI like:
 
     wsk property set --apihost "http://127.0.0.1:8080"
-    wsk list
+    echo -e "function main() {\n  return {payload: 'Hello world'};\n}" > hello.js
     wsk action create hello hello.js
+    wsk action list
     wsk action get hello
+    wsk action create hello-container --docker busybox
+    wsk action get hello-container
 
 ## Implementing the server
 
