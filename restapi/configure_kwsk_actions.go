@@ -1,7 +1,11 @@
 package restapi
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
 
@@ -13,6 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	build "github.com/knative/build/pkg/apis/build/v1alpha1"
 	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	knative "github.com/knative/serving/pkg/client/clientset/versioned"
 )
@@ -43,12 +48,26 @@ func deleteActionFunc(knativeClient *knative.Clientset) actions.DeleteActionHand
 			}
 			return actions.NewDeleteActionInternalServerError().WithPayload(errorMessage)
 		}
+
+		err = knativeClient.ServingV1alpha1().Routes(namespace).Delete(params.ActionName, &metav1.DeleteOptions{})
+		if err != nil {
+			msg := err.Error()
+			errorMessage := &models.ErrorMessage{
+				Error: &msg,
+			}
+			if errors.IsNotFound(err) {
+				return actions.NewDeleteActionNotFound().WithPayload(errorMessage)
+			}
+			return actions.NewDeleteActionInternalServerError().WithPayload(errorMessage)
+		}
+
 		return actions.NewDeleteActionOK()
 	}
 }
 
 func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHandlerFunc {
 	return func(params actions.UpdateActionParams) middleware.Responder {
+		name := params.ActionName
 		namespace := namespaceOrDefault(params.Namespace)
 
 		annotations := make(map[string]string)
@@ -56,25 +75,44 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		annotations["kwsk_action_kind"] = *params.Action.Exec.Kind
 		annotations["kwsk_action_code"] = params.Action.Exec.Code
 
-		container := corev1.Container{
-			Image: params.Action.Exec.Image,
-		}
 		config := &v1alpha1.Configuration{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:        params.ActionName,
+				Name:        name,
 				Namespace:   namespace,
 				Annotations: annotations,
 			},
 			Spec: v1alpha1.ConfigurationSpec{
-				Generation: 0,
 				RevisionTemplate: v1alpha1.RevisionTemplateSpec{
-					Spec: v1alpha1.RevisionSpec{
-						Container: container,
-					},
+					ObjectMeta: metav1.ObjectMeta{},
+					Spec:       v1alpha1.RevisionSpec{},
 				},
 			},
 		}
-		fmt.Printf("Creating action %+v\n", config)
+
+		image := params.Action.Exec.Image
+		if image == "" {
+			// TODO: Map the kind of the action to an image instead of
+			// just assuming everything is node8
+			image = "openwhisk/action-nodejs-v8"
+			// TODO: This is just a dummy, placeholder BuildSpec. We
+			// don't actually use it for anything.
+			buildSpec := &build.BuildSpec{
+				Steps: []corev1.Container{
+					corev1.Container{
+						Image:   image,
+						Command: []string{"/bin/bash"},
+						Args:    []string{"-c", "echo 'hi'"},
+					},
+				},
+			}
+			config.Spec.Build = buildSpec
+		}
+		container := corev1.Container{
+			Image: image,
+		}
+		config.Spec.RevisionTemplate.Spec.Container = container
+
+		fmt.Printf("Creating configuration %+v\n", config)
 		createdConfig, err := knativeClient.ServingV1alpha1().Configurations(namespace).Create(config)
 		if err != nil {
 			msg := err.Error()
@@ -83,6 +121,22 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 			}
 			return actions.NewUpdateActionInternalServerError().WithPayload(errorMessage)
 		}
+
+		route := &v1alpha1.Route{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: namespace,
+			},
+			Spec: v1alpha1.RouteSpec{
+				Traffic: []v1alpha1.TrafficTarget{
+					v1alpha1.TrafficTarget{
+						ConfigurationName: name,
+						Percent:           100,
+					},
+				},
+			},
+		}
+		_, err = knativeClient.ServingV1alpha1().Routes(namespace).Create(route)
 		id := createdConfig.ObjectMeta.SelfLink
 		itemId := &models.ItemID{
 			ID: &id,
@@ -149,14 +203,162 @@ func getAllActionsFunc(knativeClient *knative.Clientset) actions.GetAllActionsHa
 	}
 }
 
+type ActionInitMessage struct {
+	Value ActionInitValue `json:"value,omitempty"`
+}
+
+type ActionInitValue struct {
+	Main string `json:"main,omitempty"`
+	Code string `json:"code,omitempty"`
+}
+
+type ActionRunMessage struct {
+	Value ActionRunValue `json:"value,omitempty"`
+}
+
+type ActionRunValue struct {
+}
+
 func invokeActionFunc(knativeClient *knative.Clientset) actions.InvokeActionHandlerFunc {
 	return func(params actions.InvokeActionParams) middleware.Responder {
-		activationId := "fake-activation"
-		activation := &models.Activation{
-			ActivationID: &activationId,
+		namespace := namespaceOrDefault(params.Namespace)
+		route, err := knativeClient.ServingV1alpha1().Routes(namespace).Get(params.ActionName, metav1.GetOptions{})
+		if err != nil {
+			errorMessage := errorMessageFromErr(err)
+			if errors.IsNotFound(err) {
+				return actions.NewInvokeActionNotFound().WithPayload(errorMessage)
+			}
+			return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
 		}
-		return actions.NewInvokeActionOK().WithPayload(activation)
+
+		config, err := knativeClient.ServingV1alpha1().Configurations(namespace).Get(params.ActionName, metav1.GetOptions{})
+		if err != nil {
+			errorMessage := errorMessageFromErr(err)
+			if errors.IsNotFound(err) {
+				return actions.NewInvokeActionNotFound().WithPayload(errorMessage)
+			}
+			return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
+		}
+		annotations := config.Annotations
+
+		actionHost := route.Status.Domain
+
+		// If we're running in-cluster this needs to be an internal
+		// hostname. If we're running outside the cluster, this needs
+		// to be the exposed route and/or nodeport. For now, don't
+		// worry about magic and expect it to be explicitly configured
+		// via a flag.
+		//
+		// host := "istio-ingress.istio-system.svc.cluster.local"
+		istioHostAndPort := kwskFlags.Istio
+		if istioHostAndPort == "" {
+			panic("Istio host and port must be provided via --istio flag to invoke actions")
+		}
+
+		// TODO: Don't init the action every time it's invoked
+		errResponder := initAction(istioHostAndPort, actionHost, annotations["kwsk_action_code"])
+		if errResponder != nil {
+			return errResponder
+		}
+
+		// TODO: Handle invoke parameters
+		return runAction(istioHostAndPort, actionHost, config.Name, namespace)
 	}
+}
+
+func initAction(istioHostAndPort string, actionHost string, actionCode string) middleware.Responder {
+	initBody := &ActionInitMessage{
+		Value: ActionInitValue{
+			Main: "main",
+			Code: actionCode,
+		},
+	}
+	resStatus, resBody, err := actionRequest(istioHostAndPort, actionHost, "init", initBody)
+	if err != nil {
+		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessageFromErr(err))
+	}
+
+	if resStatus != http.StatusOK {
+		msg := fmt.Sprintf("Error initializating action. Status: %d, Message: %s\n", resStatus, resBody)
+		errorMessage := &models.ErrorMessage{
+			Error: &msg,
+		}
+		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
+	}
+
+	return nil
+}
+
+func runAction(istioHostAndPort string, actionHost string, name string, namespace string) middleware.Responder {
+	runBody := &ActionRunMessage{
+		Value: ActionRunValue{},
+	}
+	resStatus, resBody, err := actionRequest(istioHostAndPort, actionHost, "run", runBody)
+	if err != nil {
+		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessageFromErr(err))
+	}
+
+	if resStatus != http.StatusOK {
+		msg := fmt.Sprintf("Error invoking action. Status: %d, Message: %s\n", resStatus, resBody)
+		errorMessage := &models.ErrorMessage{
+			Error: &msg,
+		}
+		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
+	}
+
+	var resultJson interface{}
+	err = json.Unmarshal(resBody, &resultJson)
+	if err != nil {
+		msg := fmt.Sprintf("Action invocation result was not valid JSON. Result: %s\n", resStatus, resBody)
+		errorMessage := &models.ErrorMessage{
+			Error: &msg,
+		}
+		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
+	}
+	activationResult := &models.ActivationResult{
+		Value: resultJson,
+	}
+
+	activationId := "dummyactivationid"
+	logs := ""
+	activation := &models.Activation{
+		ActivationID: &activationId,
+		Name:         &name,
+		Namespace:    &namespace,
+		Result:       activationResult,
+		Logs:         &logs,
+	}
+	return actions.NewInvokeActionOK().WithPayload(activation)
+}
+
+func actionRequest(istioHostAndPort string, actionHost string, path string, requestBody interface{}) (int, []byte, error) {
+	url := fmt.Sprintf("http://%s/%s", istioHostAndPort, path)
+	fmt.Printf("Sending POST to url %s\n", url)
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		return 500, nil, err
+	}
+	fmt.Printf("Request Body: %s\n", body)
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return 500, nil, err
+	}
+
+	req.Host = actionHost
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return 500, nil, err
+	}
+
+	defer res.Body.Close()
+	resBody, _ := ioutil.ReadAll(res.Body)
+	fmt.Printf("Response Body: %s\n", string(resBody))
+
+	return res.StatusCode, resBody, nil
 }
 
 func namespaceOrDefault(namespace string) string {
@@ -168,4 +370,11 @@ func namespaceOrDefault(namespace string) string {
 		namespace = "default"
 	}
 	return namespace
+}
+
+func errorMessageFromErr(err error) *models.ErrorMessage {
+	msg := err.Error()
+	return &models.ErrorMessage{
+		Error: &msg,
+	}
 }

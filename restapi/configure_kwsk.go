@@ -34,6 +34,7 @@ import (
 var kwskFlags = struct {
 	Master     string `long:"master" description:"Kubernetes Master URL"`
 	Kubeconfig string `long:"kubeconfig" description:"Absolute path to the kubeconfig"`
+	Istio      string `long:"istio" description:"Host and port of Istio Ingress service"`
 }{}
 
 func configureFlags(api *operations.KwskAPI) {

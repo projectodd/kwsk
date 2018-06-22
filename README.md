@@ -8,8 +8,12 @@ checked somewhere under `$GOPATH/src`.
 
 ## Running the server
 
+Change the Istio value below to the appropriate value for your
+environment for the istio-ingress service. It's only needed when
+invoking actions.
+
     dep ensure
-    go run ./cmd/kwsk-server/main.go --port 8080
+    go run ./cmd/kwsk-server/main.go --port 8080 --istio 192.168.124.97:32000
 
 ## Testing the server
 
