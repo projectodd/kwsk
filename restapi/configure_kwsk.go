@@ -29,7 +29,7 @@ import (
 	knative "github.com/knative/serving/pkg/client/clientset/versioned"
 )
 
-//go:generate swagger generate server --target .. --name Kwsk --spec ../../../../../../openwhisk/core/controller/build/resources/main/apiv1swagger.json --principal models.Principal
+//go:generate swagger generate server --target .. --name Kwsk --spec ../apiv1swagger.json --principal models.Principal
 
 var kwskFlags = struct {
 	Master     string `long:"master" description:"Kubernetes Master URL"`
