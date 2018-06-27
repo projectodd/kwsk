@@ -24,13 +24,22 @@ No automated testing yet, but you can hit the thing via curl like:
 Or via the `wsk` CLI like:
 
     wsk property set --apihost "http://127.0.0.1:8080"
-    echo -e "function main() {\n  return {payload: 'Hello world'};\n}" > hello.js
+
+    cat <<EOF >hello.js
+    function main(params) {
+      var name = params.name || 'stranger';
+      var greeting = 'Hello ' + name + '!';
+      console.log(greeting);
+      return {payload: greeting};
+    }
+    EOF
+
     wsk action create hello hello.js
     wsk action list
     wsk action get hello
-    wsk action create hello-container --docker busybox
-    wsk action get hello-container
-    wsk action invoke hello
+    wsk action invoke hello -r -p name world
+    
+    kubectl logs $(kubectl get pod | grep hello.*deployment | awk '{print $1}') -c user-container
 
 ## Implementing the server
 

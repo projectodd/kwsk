@@ -213,7 +213,14 @@ type ActionInitValue struct {
 }
 
 type ActionRunMessage struct {
-	Value interface{} `json:"value,omitempty"`
+	Value interface{} `json:"value"`
+}
+
+func getActionParameters(params actions.InvokeActionParams) interface{} {
+	if params.Payload == nil {
+		return map[string]string{}
+	}
+	return params.Payload
 }
 
 func invokeActionFunc(knativeClient *knative.Clientset) actions.InvokeActionHandlerFunc {
@@ -257,7 +264,7 @@ func invokeActionFunc(knativeClient *knative.Clientset) actions.InvokeActionHand
 		if errResponder != nil {
 			return errResponder
 		}
-		return runAction(istioHostAndPort, actionHost, config.Name, namespace, params.Payload)
+		return runAction(istioHostAndPort, actionHost, config.Name, namespace, getActionParameters(params))
 	}
 }
 
@@ -284,10 +291,10 @@ func initAction(istioHostAndPort string, actionHost string, actionCode string) m
 	return nil
 }
 
-func runAction(istioHostAndPort string, actionHost string, name string, namespace string, payload interface{}) middleware.Responder {
+func runAction(istioHostAndPort string, actionHost string, name string, namespace string, params interface{}) middleware.Responder {
 
 	runBody := &ActionRunMessage{
-		Value: payload,
+		Value: params,
 	}
 	resStatus, resBody, err := actionRequest(istioHostAndPort, actionHost, "run", runBody)
 	if err != nil {
