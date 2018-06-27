@@ -328,11 +328,14 @@
                         "name": "payload",
                         "in": "body",
                         "description": "The parameters for the action being invoked",
-                        "required": false,
                         "schema": {
-                            "$ref": "#/definitions/KeyValue"
-                        }
+                            "type": "object"
+                        },
+                        "required": false
                     }
+                ],
+                "consumes": [
+                    "application/json"
                 ],
                 "responses": {
                     "200": {

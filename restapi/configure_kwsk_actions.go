@@ -213,10 +213,7 @@ type ActionInitValue struct {
 }
 
 type ActionRunMessage struct {
-	Value ActionRunValue `json:"value,omitempty"`
-}
-
-type ActionRunValue struct {
+	Value interface{} `json:"value,omitempty"`
 }
 
 func invokeActionFunc(knativeClient *knative.Clientset) actions.InvokeActionHandlerFunc {
@@ -260,9 +257,7 @@ func invokeActionFunc(knativeClient *knative.Clientset) actions.InvokeActionHand
 		if errResponder != nil {
 			return errResponder
 		}
-
-		// TODO: Handle invoke parameters
-		return runAction(istioHostAndPort, actionHost, config.Name, namespace)
+		return runAction(istioHostAndPort, actionHost, config.Name, namespace, params.Payload)
 	}
 }
 
@@ -289,9 +284,10 @@ func initAction(istioHostAndPort string, actionHost string, actionCode string) m
 	return nil
 }
 
-func runAction(istioHostAndPort string, actionHost string, name string, namespace string) middleware.Responder {
+func runAction(istioHostAndPort string, actionHost string, name string, namespace string, payload interface{}) middleware.Responder {
+
 	runBody := &ActionRunMessage{
-		Value: ActionRunValue{},
+		Value: payload,
 	}
 	resStatus, resBody, err := actionRequest(istioHostAndPort, actionHost, "run", runBody)
 	if err != nil {

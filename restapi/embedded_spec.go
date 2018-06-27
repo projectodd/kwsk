@@ -232,6 +232,9 @@ func init() {
       },
       "post": {
         "description": "Invoke an action",
+        "consumes": [
+          "application/json"
+        ],
         "tags": [
           "Actions"
         ],
@@ -283,7 +286,7 @@ func init() {
             "name": "payload",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/KeyValue"
+              "type": "object"
             }
           }
         ],
@@ -2300,6 +2303,9 @@ func init() {
       },
       "post": {
         "description": "Invoke an action",
+        "consumes": [
+          "application/json"
+        ],
         "tags": [
           "Actions"
         ],
@@ -2351,7 +2357,7 @@ func init() {
             "name": "payload",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/KeyValue"
+              "type": "object"
             }
           }
         ],

@@ -15,8 +15,6 @@ import (
 	"github.com/go-openapi/validate"
 
 	strfmt "github.com/go-openapi/strfmt"
-
-	models "github.com/projectodd/kwsk/models"
 )
 
 // NewInvokeActionParams creates a new InvokeActionParams object
@@ -52,7 +50,7 @@ type InvokeActionParams struct {
 	/*The parameters for the action being invoked
 	  In: body
 	*/
-	Payload *models.KeyValue
+	Payload interface{}
 	/*Return only the result of a blocking activation. Default is false.
 	  In: query
 	*/
@@ -91,19 +89,13 @@ func (o *InvokeActionParams) BindRequest(r *http.Request, route *middleware.Matc
 
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
-		var body models.KeyValue
+		var body interface{}
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			res = append(res, errors.NewParseError("payload", "body", "", err))
 		} else {
 
-			// validate body object
-			if err := body.Validate(route.Formats); err != nil {
-				res = append(res, err)
-			}
-
-			if len(res) == 0 {
-				o.Payload = &body
-			}
+			// no validation on generic interface
+			o.Payload = body
 		}
 	}
 	qResult, qhkResult, _ := qs.GetOK("result")
