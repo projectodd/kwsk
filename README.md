@@ -8,12 +8,18 @@ checked somewhere under `$GOPATH/src`.
 
 ## Running the server
 
-Change the Istio value below to the appropriate value for your
-environment for the istio-ingress service. It's only needed when
+    dep ensure
+    
+Change the Istio value below to the appropriate value for your environment for the istio-ingress service. It's only needed when
 invoking actions.
 
-    dep ensure
     go run ./cmd/kwsk-server/main.go --port 8080 --istio 192.168.124.97:32000
+    
+For GKE-based Knative, the istio-ingress service is a LoadBalancer type instead of Nodeport type like it is on minikube.  And you
+have to use port 80 instead of port 32000.  So, if you are using GKE-based Knative do the following:
+
+    ISTIO_ING=$(kubectl get svc/istio-ingress -n istio-system -o yaml | grep ip | cut -d ":" -f 2)
+    go run ./cmd/kwsk-server/main.go --port 8080 --istio $ISTIO_ING:80
 
 ## Testing the server
 
@@ -38,6 +44,7 @@ Or via the `wsk` CLI like:
     wsk action list
     wsk action get hello
     wsk action invoke hello -r -p name world
+    (Note: The command above will fail the first time but should work if you repeat it)
     
     kubectl logs $(kubectl get pod | grep hello.*deployment | awk '{print $1}') -c user-container
 
