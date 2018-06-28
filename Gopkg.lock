@@ -179,7 +179,7 @@
     "pkg/apis/build",
     "pkg/apis/build/v1alpha1"
   ]
-  revision = "5127da35831f0c56d234e23ff087e9caf77d75e7"
+  revision = "5dba97ea172464d6459c393330ffba2152ec78dd"
 
 [[projects]]
   branch = "master"
@@ -194,7 +194,7 @@
     "pkg/client/clientset/versioned/typed/istio/v1alpha2",
     "pkg/client/clientset/versioned/typed/serving/v1alpha1"
   ]
-  revision = "ea245c984de44960d3d690728231eaa4082c7619"
+  revision = "6ba41d6386da32d5b7778cdaa6b884fa64257400"
 
 [[projects]]
   branch = "master"
