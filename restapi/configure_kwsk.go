@@ -11,16 +11,10 @@ import (
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
-	middleware "github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	graceful "github.com/tylerb/graceful"
 
 	"github.com/projectodd/kwsk/restapi/operations"
-	"github.com/projectodd/kwsk/restapi/operations/activations"
-	"github.com/projectodd/kwsk/restapi/operations/namespaces"
-	"github.com/projectodd/kwsk/restapi/operations/packages"
-	"github.com/projectodd/kwsk/restapi/operations/rules"
-	"github.com/projectodd/kwsk/restapi/operations/triggers"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
@@ -66,67 +60,11 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 	}
 
 	configureActions(api, knativeClient)
-
-	// TODO: This is super messy. Separate out all these generated
-	// handlers by type at a minimum
-
-	api.ActivationsGetNamespacesNamespaceActivationsActivationidLogsHandler = activations.GetNamespacesNamespaceActivationsActivationidLogsHandlerFunc(func(params activations.GetNamespacesNamespaceActivationsActivationidLogsParams) middleware.Responder {
-		return middleware.NotImplemented("operation activations.GetNamespacesNamespaceActivationsActivationidLogs has not yet been implemented")
-	})
-	api.ActivationsGetNamespacesNamespaceActivationsActivationidResultHandler = activations.GetNamespacesNamespaceActivationsActivationidResultHandlerFunc(func(params activations.GetNamespacesNamespaceActivationsActivationidResultParams) middleware.Responder {
-		return middleware.NotImplemented("operation activations.GetNamespacesNamespaceActivationsActivationidResult has not yet been implemented")
-	})
-	api.PackagesDeletePackageHandler = packages.DeletePackageHandlerFunc(func(params packages.DeletePackageParams) middleware.Responder {
-		return middleware.NotImplemented("operation packages.DeletePackage has not yet been implemented")
-	})
-	api.RulesDeleteRuleHandler = rules.DeleteRuleHandlerFunc(func(params rules.DeleteRuleParams) middleware.Responder {
-		return middleware.NotImplemented("operation rules.DeleteRule has not yet been implemented")
-	})
-	api.TriggersDeleteTriggerHandler = triggers.DeleteTriggerHandlerFunc(func(params triggers.DeleteTriggerParams) middleware.Responder {
-		return middleware.NotImplemented("operation triggers.DeleteTrigger has not yet been implemented")
-	})
-	api.TriggersFireTriggerHandler = triggers.FireTriggerHandlerFunc(func(params triggers.FireTriggerParams) middleware.Responder {
-		return middleware.NotImplemented("operation triggers.FireTrigger has not yet been implemented")
-	})
-	api.ActivationsGetActivationByIDHandler = activations.GetActivationByIDHandlerFunc(func(params activations.GetActivationByIDParams) middleware.Responder {
-		return middleware.NotImplemented("operation activations.GetActivationByID has not yet been implemented")
-	})
-	api.ActivationsGetActivationsHandler = activations.GetActivationsHandlerFunc(func(params activations.GetActivationsParams) middleware.Responder {
-		return middleware.NotImplemented("operation activations.GetActivations has not yet been implemented")
-	})
-	api.PackagesGetAlPackagesHandler = packages.GetAlPackagesHandlerFunc(func(params packages.GetAlPackagesParams) middleware.Responder {
-		return packages.NewGetAlPackagesOK()
-	})
-	api.NamespacesGetAllNamespacesHandler = namespaces.GetAllNamespacesHandlerFunc(func(params namespaces.GetAllNamespacesParams) middleware.Responder {
-		return middleware.NotImplemented("operation namespaces.GetAllNamespaces has not yet been implemented")
-	})
-	api.RulesGetAllRulesHandler = rules.GetAllRulesHandlerFunc(func(params rules.GetAllRulesParams) middleware.Responder {
-		return rules.NewGetAllRulesOK()
-	})
-	api.TriggersGetAllTriggersHandler = triggers.GetAllTriggersHandlerFunc(func(params triggers.GetAllTriggersParams) middleware.Responder {
-		return triggers.NewGetAllTriggersOK()
-	})
-	api.PackagesGetPackageByNameHandler = packages.GetPackageByNameHandlerFunc(func(params packages.GetPackageByNameParams) middleware.Responder {
-		return middleware.NotImplemented("operation packages.GetPackageByName has not yet been implemented")
-	})
-	api.RulesGetRuleByNameHandler = rules.GetRuleByNameHandlerFunc(func(params rules.GetRuleByNameParams) middleware.Responder {
-		return middleware.NotImplemented("operation rules.GetRuleByName has not yet been implemented")
-	})
-	api.TriggersGetTriggerByNameHandler = triggers.GetTriggerByNameHandlerFunc(func(params triggers.GetTriggerByNameParams) middleware.Responder {
-		return middleware.NotImplemented("operation triggers.GetTriggerByName has not yet been implemented")
-	})
-	api.RulesSetStateHandler = rules.SetStateHandlerFunc(func(params rules.SetStateParams) middleware.Responder {
-		return middleware.NotImplemented("operation rules.SetState has not yet been implemented")
-	})
-	api.PackagesUpdatePackageHandler = packages.UpdatePackageHandlerFunc(func(params packages.UpdatePackageParams) middleware.Responder {
-		return middleware.NotImplemented("operation packages.UpdatePackage has not yet been implemented")
-	})
-	api.RulesUpdateRuleHandler = rules.UpdateRuleHandlerFunc(func(params rules.UpdateRuleParams) middleware.Responder {
-		return middleware.NotImplemented("operation rules.UpdateRule has not yet been implemented")
-	})
-	api.TriggersUpdateTriggerHandler = triggers.UpdateTriggerHandlerFunc(func(params triggers.UpdateTriggerParams) middleware.Responder {
-		return middleware.NotImplemented("operation triggers.UpdateTrigger has not yet been implemented")
-	})
+	configureActivations(api, knativeClient)
+	configurePackages(api, knativeClient)
+	configureRules(api, knativeClient)
+	configureTriggers(api, knativeClient)
+	configureNamespaces(api, knativeClient)
 
 	api.ServerShutdown = func() {}
 
