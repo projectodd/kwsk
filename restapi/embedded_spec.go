@@ -580,7 +580,7 @@ func init() {
           "Packages"
         ],
         "summary": "Get all packages",
-        "operationId": "getAlPackages",
+        "operationId": "getAllPackages",
         "parameters": [
           {
             "type": "string",
@@ -2705,7 +2705,7 @@ func init() {
           "Packages"
         ],
         "summary": "Get all packages",
-        "operationId": "getAlPackages",
+        "operationId": "getAllPackages",
         "parameters": [
           {
             "type": "string",

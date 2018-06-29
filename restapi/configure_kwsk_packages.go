@@ -13,8 +13,8 @@ func configurePackages(api *operations.KwskAPI, knativeClient *knative.Clientset
 	api.PackagesDeletePackageHandler = packages.DeletePackageHandlerFunc(func(params packages.DeletePackageParams) middleware.Responder {
 		return middleware.NotImplemented("operation packages.DeletePackage has not yet been implemented")
 	})
-	api.PackagesGetAlPackagesHandler = packages.GetAlPackagesHandlerFunc(func(params packages.GetAlPackagesParams) middleware.Responder {
-		return packages.NewGetAlPackagesOK()
+	api.PackagesGetAllPackagesHandler = packages.GetAllPackagesHandlerFunc(func(params packages.GetAllPackagesParams) middleware.Responder {
+		return packages.NewGetAllPackagesOK()
 	})
 	api.PackagesGetPackageByNameHandler = packages.GetPackageByNameHandlerFunc(func(params packages.GetPackageByNameParams) middleware.Responder {
 		return middleware.NotImplemented("operation packages.GetPackageByName has not yet been implemented")

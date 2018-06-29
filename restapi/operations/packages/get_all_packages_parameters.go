@@ -16,18 +16,18 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 )
 
-// NewGetAlPackagesParams creates a new GetAlPackagesParams object
+// NewGetAllPackagesParams creates a new GetAllPackagesParams object
 // no default values defined in spec.
-func NewGetAlPackagesParams() GetAlPackagesParams {
+func NewGetAllPackagesParams() GetAllPackagesParams {
 
-	return GetAlPackagesParams{}
+	return GetAllPackagesParams{}
 }
 
-// GetAlPackagesParams contains all the bound params for the get al packages operation
+// GetAllPackagesParams contains all the bound params for the get all packages operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters getAlPackages
-type GetAlPackagesParams struct {
+// swagger:parameters getAllPackages
+type GetAllPackagesParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
@@ -54,8 +54,8 @@ type GetAlPackagesParams struct {
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls.
 //
-// To ensure default values, the struct must have been initialized with NewGetAlPackagesParams() beforehand.
-func (o *GetAlPackagesParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+// To ensure default values, the struct must have been initialized with NewGetAllPackagesParams() beforehand.
+func (o *GetAllPackagesParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
 	o.HTTPRequest = r
@@ -88,7 +88,7 @@ func (o *GetAlPackagesParams) BindRequest(r *http.Request, route *middleware.Mat
 	return nil
 }
 
-func (o *GetAlPackagesParams) bindLimit(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *GetAllPackagesParams) bindLimit(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
@@ -109,7 +109,7 @@ func (o *GetAlPackagesParams) bindLimit(rawData []string, hasKey bool, formats s
 	return nil
 }
 
-func (o *GetAlPackagesParams) bindNamespace(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *GetAllPackagesParams) bindNamespace(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
@@ -123,7 +123,7 @@ func (o *GetAlPackagesParams) bindNamespace(rawData []string, hasKey bool, forma
 	return nil
 }
 
-func (o *GetAlPackagesParams) bindPublic(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *GetAllPackagesParams) bindPublic(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
@@ -144,7 +144,7 @@ func (o *GetAlPackagesParams) bindPublic(rawData []string, hasKey bool, formats 
 	return nil
 }
 
-func (o *GetAlPackagesParams) bindSkip(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *GetAllPackagesParams) bindSkip(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]

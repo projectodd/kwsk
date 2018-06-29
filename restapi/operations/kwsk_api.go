@@ -74,14 +74,14 @@ func NewKwskAPI(spec *loads.Document) *KwskAPI {
 		ActivationsGetActivationsHandler: activations.GetActivationsHandlerFunc(func(params activations.GetActivationsParams) middleware.Responder {
 			return middleware.NotImplemented("operation ActivationsGetActivations has not yet been implemented")
 		}),
-		PackagesGetAlPackagesHandler: packages.GetAlPackagesHandlerFunc(func(params packages.GetAlPackagesParams) middleware.Responder {
-			return middleware.NotImplemented("operation PackagesGetAlPackages has not yet been implemented")
-		}),
 		ActionsGetAllActionsHandler: actions.GetAllActionsHandlerFunc(func(params actions.GetAllActionsParams) middleware.Responder {
 			return middleware.NotImplemented("operation ActionsGetAllActions has not yet been implemented")
 		}),
 		NamespacesGetAllNamespacesHandler: namespaces.GetAllNamespacesHandlerFunc(func(params namespaces.GetAllNamespacesParams) middleware.Responder {
 			return middleware.NotImplemented("operation NamespacesGetAllNamespaces has not yet been implemented")
+		}),
+		PackagesGetAllPackagesHandler: packages.GetAllPackagesHandlerFunc(func(params packages.GetAllPackagesParams) middleware.Responder {
+			return middleware.NotImplemented("operation PackagesGetAllPackages has not yet been implemented")
 		}),
 		RulesGetAllRulesHandler: rules.GetAllRulesHandlerFunc(func(params rules.GetAllRulesParams) middleware.Responder {
 			return middleware.NotImplemented("operation RulesGetAllRules has not yet been implemented")
@@ -167,12 +167,12 @@ type KwskAPI struct {
 	ActivationsGetActivationByIDHandler activations.GetActivationByIDHandler
 	// ActivationsGetActivationsHandler sets the operation handler for the get activations operation
 	ActivationsGetActivationsHandler activations.GetActivationsHandler
-	// PackagesGetAlPackagesHandler sets the operation handler for the get al packages operation
-	PackagesGetAlPackagesHandler packages.GetAlPackagesHandler
 	// ActionsGetAllActionsHandler sets the operation handler for the get all actions operation
 	ActionsGetAllActionsHandler actions.GetAllActionsHandler
 	// NamespacesGetAllNamespacesHandler sets the operation handler for the get all namespaces operation
 	NamespacesGetAllNamespacesHandler namespaces.GetAllNamespacesHandler
+	// PackagesGetAllPackagesHandler sets the operation handler for the get all packages operation
+	PackagesGetAllPackagesHandler packages.GetAllPackagesHandler
 	// RulesGetAllRulesHandler sets the operation handler for the get all rules operation
 	RulesGetAllRulesHandler rules.GetAllRulesHandler
 	// TriggersGetAllTriggersHandler sets the operation handler for the get all triggers operation
@@ -298,16 +298,16 @@ func (o *KwskAPI) Validate() error {
 		unregistered = append(unregistered, "activations.GetActivationsHandler")
 	}
 
-	if o.PackagesGetAlPackagesHandler == nil {
-		unregistered = append(unregistered, "packages.GetAlPackagesHandler")
-	}
-
 	if o.ActionsGetAllActionsHandler == nil {
 		unregistered = append(unregistered, "actions.GetAllActionsHandler")
 	}
 
 	if o.NamespacesGetAllNamespacesHandler == nil {
 		unregistered = append(unregistered, "namespaces.GetAllNamespacesHandler")
+	}
+
+	if o.PackagesGetAllPackagesHandler == nil {
+		unregistered = append(unregistered, "packages.GetAllPackagesHandler")
 	}
 
 	if o.RulesGetAllRulesHandler == nil {
@@ -505,17 +505,17 @@ func (o *KwskAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/namespaces/{namespace}/packages"] = packages.NewGetAlPackages(o.context, o.PackagesGetAlPackagesHandler)
-
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
 	o.handlers["GET"]["/namespaces/{namespace}/actions"] = actions.NewGetAllActions(o.context, o.ActionsGetAllActionsHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/namespaces"] = namespaces.NewGetAllNamespaces(o.context, o.NamespacesGetAllNamespacesHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/namespaces/{namespace}/packages"] = packages.NewGetAllPackages(o.context, o.PackagesGetAllPackagesHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
