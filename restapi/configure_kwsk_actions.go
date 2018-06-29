@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	middleware "github.com/go-openapi/runtime/middleware"
 
@@ -36,8 +37,9 @@ func configureActions(api *operations.KwskAPI, knativeClient *knative.Clientset)
 
 func deleteActionFunc(knativeClient *knative.Clientset) actions.DeleteActionHandlerFunc {
 	return func(params actions.DeleteActionParams) middleware.Responder {
+		configName := sanitizeActionName(params.ActionName)
 		namespace := namespaceOrDefault(params.Namespace)
-		err := knativeClient.ServingV1alpha1().Configurations(namespace).Delete(params.ActionName, &metav1.DeleteOptions{})
+		err := knativeClient.ServingV1alpha1().Configurations(namespace).Delete(configName, &metav1.DeleteOptions{})
 		if err != nil {
 			msg := err.Error()
 			errorMessage := &models.ErrorMessage{
@@ -49,7 +51,7 @@ func deleteActionFunc(knativeClient *knative.Clientset) actions.DeleteActionHand
 			return actions.NewDeleteActionInternalServerError().WithPayload(errorMessage)
 		}
 
-		err = knativeClient.ServingV1alpha1().Routes(namespace).Delete(params.ActionName, &metav1.DeleteOptions{})
+		err = knativeClient.ServingV1alpha1().Routes(namespace).Delete(configName, &metav1.DeleteOptions{})
 		if err != nil {
 			msg := err.Error()
 			errorMessage := &models.ErrorMessage{
@@ -68,16 +70,18 @@ func deleteActionFunc(knativeClient *knative.Clientset) actions.DeleteActionHand
 func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHandlerFunc {
 	return func(params actions.UpdateActionParams) middleware.Responder {
 		name := params.ActionName
+		configName := sanitizeActionName(name)
 		namespace := namespaceOrDefault(params.Namespace)
 
 		annotations := make(map[string]string)
+		annotations["kwsk_action_name"] = name
 		annotations["kwsk_action_version"] = params.Action.Version
 		annotations["kwsk_action_kind"] = *params.Action.Exec.Kind
 		annotations["kwsk_action_code"] = params.Action.Exec.Code
 
 		config := &v1alpha1.Configuration{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:        name,
+				Name:        configName,
 				Namespace:   namespace,
 				Annotations: annotations,
 			},
@@ -119,18 +123,19 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 			errorMessage := &models.ErrorMessage{
 				Error: &msg,
 			}
+			fmt.Println("Error updating action: ", err)
 			return actions.NewUpdateActionInternalServerError().WithPayload(errorMessage)
 		}
 
 		route := &v1alpha1.Route{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
+				Name:      configName,
 				Namespace: namespace,
 			},
 			Spec: v1alpha1.RouteSpec{
 				Traffic: []v1alpha1.TrafficTarget{
 					v1alpha1.TrafficTarget{
-						ConfigurationName: name,
+						ConfigurationName: configName,
 						Percent:           100,
 					},
 				},
@@ -147,8 +152,9 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 
 func getActionByNameFunc(knativeClient *knative.Clientset) actions.GetActionByNameHandlerFunc {
 	return func(params actions.GetActionByNameParams) middleware.Responder {
+		configName := sanitizeActionName(params.ActionName)
 		namespace := namespaceOrDefault(params.Namespace)
-		config, err := knativeClient.ServingV1alpha1().Configurations(namespace).Get(params.ActionName, metav1.GetOptions{})
+		config, err := knativeClient.ServingV1alpha1().Configurations(namespace).Get(configName, metav1.GetOptions{})
 		if err != nil {
 			msg := err.Error()
 			errorMessage := &models.ErrorMessage{
@@ -160,11 +166,12 @@ func getActionByNameFunc(knativeClient *knative.Clientset) actions.GetActionByNa
 			return actions.NewGetActionByNameInternalServerError().WithPayload(errorMessage)
 		}
 		objectMeta := config.ObjectMeta
+		name := objectMeta.Annotations["kwsk_action_name"]
 		kind := objectMeta.Annotations["kwsk_action_kind"]
 		version := objectMeta.Annotations["kwsk_action_version"]
 		code := objectMeta.Annotations["kwsk_action_code"]
 		payload := &models.Action{
-			Name:      &objectMeta.Name,
+			Name:      &name,
 			Namespace: &objectMeta.Namespace,
 			Version:   &version,
 			Exec: &models.ActionExec{
@@ -190,7 +197,7 @@ func getAllActionsFunc(knativeClient *knative.Clientset) actions.GetAllActionsHa
 		}
 		var payload = make([]*models.EntityBrief, len(configs.Items))
 		for i, item := range configs.Items {
-			name := item.ObjectMeta.Name
+			name := item.ObjectMeta.Annotations["kwsk_action_name"]
 			namespace := item.ObjectMeta.Namespace
 			version := item.ObjectMeta.Annotations["kwsk_action_version"]
 			payload[i] = &models.EntityBrief{
@@ -373,6 +380,10 @@ func namespaceOrDefault(namespace string) string {
 		namespace = "default"
 	}
 	return namespace
+}
+
+func sanitizeActionName(name string) string {
+	return strings.ToLower(name)
 }
 
 func errorMessageFromErr(err error) *models.ErrorMessage {
