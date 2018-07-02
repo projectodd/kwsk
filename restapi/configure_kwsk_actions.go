@@ -116,7 +116,8 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		}
 		config.Spec.RevisionTemplate.Spec.Container = container
 
-		fmt.Printf("Creating configuration %+v\n", config)
+		dbg := fmt.Sprintf("Creating configuration %+v\n", config)
+		fmt.Printf("%.2000s\n", dbg)
 		createdConfig, err := knativeClient.ServingV1alpha1().Configurations(namespace).Create(config)
 		if err != nil {
 			msg := err.Error()
