@@ -13,3 +13,5 @@
 
 # dep vendor directory
 vendor/
+/kwsk.log
+/test/openwhisk/
