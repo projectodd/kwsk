@@ -10,20 +10,21 @@ checked somewhere under `$GOPATH/src`.
 
     dep ensure
     
-Change the Istio value below to the appropriate value for your environment for the istio-ingress service. It's only needed when
-invoking actions.
+You'll need the istio ingress to invoke your actions.
 
-    go run ./cmd/kwsk-server/main.go --port 8080 --istio 192.168.124.97:32000
+    ISTIO=$(minikube ip):$(kubectl get svc knative-ingressgateway -n istio-system -o 'jsonpath={.spec.ports[?(@.port==80)].nodePort}')
+    go run ./cmd/kwsk-server/main.go --port 8080 --istio $ISTIO
     
-For GKE-based Knative, the istio-ingress service is a LoadBalancer type instead of Nodeport type like it is on minikube.  And you
-have to use port 80 instead of port 32000.  So, if you are using GKE-based Knative do the following:
+For GKE-based Knative, the istio ingress is a LoadBalancer type
+instead of Nodeport type like it is on minikube. And you have to use
+port 80. So, if you are using GKE-based Knative do the following:
 
-    ISTIO_ING=$(kubectl get svc/istio-ingress -n istio-system -o yaml | grep ip | cut -d ":" -f 2)
-    go run ./cmd/kwsk-server/main.go --port 8080 --istio $ISTIO_ING:80
+    ISTIO=$(kubectl get svc knative-ingressgateway -n istio-system -o yaml | grep ip | cut -d ":" -f 2):80
+    go run ./cmd/kwsk-server/main.go --port 8080 --istio $ISTIO
 
 ## Testing the server
 
-No automated testing yet, but you can hit the thing via curl like:
+Use curl for a crude test:
 
     curl http://127.0.0.1:8080/api/v1/namespaces/foo/actions
 
@@ -47,6 +48,30 @@ Or via the `wsk` CLI like:
     (Note: The command above will fail the first time but should work if you repeat it)
     
     kubectl logs $(kubectl get pod | grep hello.*deployment | awk '{print $1}') -c user-container
+
+### Automated testing
+
+It's possible to run the upstream OpenWhisk tests against this server
+using the scripts in the `test/bin` directory. They rely on a recent
+version of minikube started with specific options:
+
+    ./test/bin/minikube-start.sh
+    ./test/bin/knative-install.sh
+
+Once you have knative installed, running the tests is simple:
+
+    ./test/bin/integs.sh
+
+The default test matching pattern is `system.basic.WskRest*` but you
+can override that using the `TESTS` environment variable, e.g.
+
+    TESTS="system.basic.WskRestBasicNode8Tests" ./test/bin/integs.sh
+
+The latest upstream repo is cloned to `test/openwhisk` so the first
+time you run `integs.sh` will take a long time due to compilation.
+Subsequent runs will be faster since the `test/openwhisk` directory is
+not deleted. You can manually delete it, of course, to force a rebuild
+of the latest upstream OpenWhisk.
 
 ## Implementing the server
 
