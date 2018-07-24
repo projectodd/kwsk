@@ -2,7 +2,7 @@
 set -x
 
 # install istio
-wget -O - https://storage.googleapis.com/knative-releases/latest/istio.yaml \
+curl -L https://storage.googleapis.com/knative-releases/serving/latest/istio.yaml \
   | sed 's/LoadBalancer/NodePort/' \
   | kubectl apply -f -
 # label the default namespace with istio-injection=enabled.
@@ -13,7 +13,9 @@ while kubectl get pods -n istio-system | grep -v -E "(Running|Completed|STATUS)"
 done
 
 # install knative
-kubectl apply -f https://storage.googleapis.com/knative-releases/latest/release-lite.yaml
+curl -L https://storage.googleapis.com/knative-releases/serving/latest/release-lite.yaml \
+  | sed 's/LoadBalancer/NodePort/' \
+  | kubectl apply -f -
 # wait until each knative pod is up
 while kubectl get pods -n knative-serving | grep -v -E "(Running|Completed|STATUS)"; do
     sleep 5
