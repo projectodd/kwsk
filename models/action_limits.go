@@ -15,10 +15,13 @@ import (
 // swagger:model ActionLimits
 type ActionLimits struct {
 
-	// memory
+	// log size in megabytes
+	Logs *int32 `json:"logs,omitempty"`
+
+	// memory in megabytes
 	Memory *int32 `json:"memory,omitempty"`
 
-	// timeout
+	// timeout in milliseconds
 	Timeout *int32 `json:"timeout,omitempty"`
 }
 

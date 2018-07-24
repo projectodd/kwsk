@@ -25,6 +25,8 @@ import (
 	"github.com/projectodd/kwsk/restapi/operations/packages"
 	"github.com/projectodd/kwsk/restapi/operations/rules"
 	"github.com/projectodd/kwsk/restapi/operations/triggers"
+
+	models "github.com/projectodd/kwsk/models"
 )
 
 // NewKwskAPI creates a new Kwsk instance
@@ -44,78 +46,110 @@ func NewKwskAPI(spec *loads.Document) *KwskAPI {
 		BearerAuthenticator: security.BearerAuth,
 		JSONConsumer:        runtime.JSONConsumer(),
 		JSONProducer:        runtime.JSONProducer(),
-		ActivationsGetNamespacesNamespaceActivationsActivationidLogsHandler: activations.GetNamespacesNamespaceActivationsActivationidLogsHandlerFunc(func(params activations.GetNamespacesNamespaceActivationsActivationidLogsParams) middleware.Responder {
+		ActionsDeleteWebNamespacePackageNameActionNameExtensionHandler: actions.DeleteWebNamespacePackageNameActionNameExtensionHandlerFunc(func(params actions.DeleteWebNamespacePackageNameActionNameExtensionParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation ActionsDeleteWebNamespacePackageNameActionNameExtension has not yet been implemented")
+		}),
+		ActivationsGetNamespacesNamespaceActivationsActivationidLogsHandler: activations.GetNamespacesNamespaceActivationsActivationidLogsHandlerFunc(func(params activations.GetNamespacesNamespaceActivationsActivationidLogsParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation ActivationsGetNamespacesNamespaceActivationsActivationidLogs has not yet been implemented")
 		}),
-		ActivationsGetNamespacesNamespaceActivationsActivationidResultHandler: activations.GetNamespacesNamespaceActivationsActivationidResultHandlerFunc(func(params activations.GetNamespacesNamespaceActivationsActivationidResultParams) middleware.Responder {
+		ActivationsGetNamespacesNamespaceActivationsActivationidResultHandler: activations.GetNamespacesNamespaceActivationsActivationidResultHandlerFunc(func(params activations.GetNamespacesNamespaceActivationsActivationidResultParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation ActivationsGetNamespacesNamespaceActivationsActivationidResult has not yet been implemented")
 		}),
-		ActionsDeleteActionHandler: actions.DeleteActionHandlerFunc(func(params actions.DeleteActionParams) middleware.Responder {
+		ActionsGetWebNamespacePackageNameActionNameExtensionHandler: actions.GetWebNamespacePackageNameActionNameExtensionHandlerFunc(func(params actions.GetWebNamespacePackageNameActionNameExtensionParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation ActionsGetWebNamespacePackageNameActionNameExtension has not yet been implemented")
+		}),
+		ActionsPostWebNamespacePackageNameActionNameExtensionHandler: actions.PostWebNamespacePackageNameActionNameExtensionHandlerFunc(func(params actions.PostWebNamespacePackageNameActionNameExtensionParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation ActionsPostWebNamespacePackageNameActionNameExtension has not yet been implemented")
+		}),
+		ActionsPutWebNamespacePackageNameActionNameExtensionHandler: actions.PutWebNamespacePackageNameActionNameExtensionHandlerFunc(func(params actions.PutWebNamespacePackageNameActionNameExtensionParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation ActionsPutWebNamespacePackageNameActionNameExtension has not yet been implemented")
+		}),
+		ActionsDeleteActionHandler: actions.DeleteActionHandlerFunc(func(params actions.DeleteActionParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation ActionsDeleteAction has not yet been implemented")
 		}),
-		PackagesDeletePackageHandler: packages.DeletePackageHandlerFunc(func(params packages.DeletePackageParams) middleware.Responder {
+		ActionsDeleteActionInPackageHandler: actions.DeleteActionInPackageHandlerFunc(func(params actions.DeleteActionInPackageParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation ActionsDeleteActionInPackage has not yet been implemented")
+		}),
+		PackagesDeletePackageHandler: packages.DeletePackageHandlerFunc(func(params packages.DeletePackageParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation PackagesDeletePackage has not yet been implemented")
 		}),
-		RulesDeleteRuleHandler: rules.DeleteRuleHandlerFunc(func(params rules.DeleteRuleParams) middleware.Responder {
+		RulesDeleteRuleHandler: rules.DeleteRuleHandlerFunc(func(params rules.DeleteRuleParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation RulesDeleteRule has not yet been implemented")
 		}),
-		TriggersDeleteTriggerHandler: triggers.DeleteTriggerHandlerFunc(func(params triggers.DeleteTriggerParams) middleware.Responder {
+		TriggersDeleteTriggerHandler: triggers.DeleteTriggerHandlerFunc(func(params triggers.DeleteTriggerParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation TriggersDeleteTrigger has not yet been implemented")
 		}),
-		TriggersFireTriggerHandler: triggers.FireTriggerHandlerFunc(func(params triggers.FireTriggerParams) middleware.Responder {
+		TriggersFireTriggerHandler: triggers.FireTriggerHandlerFunc(func(params triggers.FireTriggerParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation TriggersFireTrigger has not yet been implemented")
 		}),
-		ActionsGetActionByNameHandler: actions.GetActionByNameHandlerFunc(func(params actions.GetActionByNameParams) middleware.Responder {
+		ActionsGetActionByNameHandler: actions.GetActionByNameHandlerFunc(func(params actions.GetActionByNameParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation ActionsGetActionByName has not yet been implemented")
 		}),
-		ActivationsGetActivationByIDHandler: activations.GetActivationByIDHandlerFunc(func(params activations.GetActivationByIDParams) middleware.Responder {
+		ActionsGetActionInPackageByNameHandler: actions.GetActionInPackageByNameHandlerFunc(func(params actions.GetActionInPackageByNameParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation ActionsGetActionInPackageByName has not yet been implemented")
+		}),
+		ActivationsGetActivationByIDHandler: activations.GetActivationByIDHandlerFunc(func(params activations.GetActivationByIDParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation ActivationsGetActivationByID has not yet been implemented")
 		}),
-		ActivationsGetActivationsHandler: activations.GetActivationsHandlerFunc(func(params activations.GetActivationsParams) middleware.Responder {
+		ActivationsGetActivationsHandler: activations.GetActivationsHandlerFunc(func(params activations.GetActivationsParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation ActivationsGetActivations has not yet been implemented")
 		}),
-		ActionsGetAllActionsHandler: actions.GetAllActionsHandlerFunc(func(params actions.GetAllActionsParams) middleware.Responder {
+		ActionsGetAllActionsHandler: actions.GetAllActionsHandlerFunc(func(params actions.GetAllActionsParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation ActionsGetAllActions has not yet been implemented")
 		}),
-		NamespacesGetAllNamespacesHandler: namespaces.GetAllNamespacesHandlerFunc(func(params namespaces.GetAllNamespacesParams) middleware.Responder {
+		NamespacesGetAllNamespacesHandler: namespaces.GetAllNamespacesHandlerFunc(func(params namespaces.GetAllNamespacesParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation NamespacesGetAllNamespaces has not yet been implemented")
 		}),
-		PackagesGetAllPackagesHandler: packages.GetAllPackagesHandlerFunc(func(params packages.GetAllPackagesParams) middleware.Responder {
+		PackagesGetAllPackagesHandler: packages.GetAllPackagesHandlerFunc(func(params packages.GetAllPackagesParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation PackagesGetAllPackages has not yet been implemented")
 		}),
-		RulesGetAllRulesHandler: rules.GetAllRulesHandlerFunc(func(params rules.GetAllRulesParams) middleware.Responder {
+		RulesGetAllRulesHandler: rules.GetAllRulesHandlerFunc(func(params rules.GetAllRulesParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation RulesGetAllRules has not yet been implemented")
 		}),
-		TriggersGetAllTriggersHandler: triggers.GetAllTriggersHandlerFunc(func(params triggers.GetAllTriggersParams) middleware.Responder {
+		TriggersGetAllTriggersHandler: triggers.GetAllTriggersHandlerFunc(func(params triggers.GetAllTriggersParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation TriggersGetAllTriggers has not yet been implemented")
 		}),
-		PackagesGetPackageByNameHandler: packages.GetPackageByNameHandlerFunc(func(params packages.GetPackageByNameParams) middleware.Responder {
+		PackagesGetPackageByNameHandler: packages.GetPackageByNameHandlerFunc(func(params packages.GetPackageByNameParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation PackagesGetPackageByName has not yet been implemented")
 		}),
-		RulesGetRuleByNameHandler: rules.GetRuleByNameHandlerFunc(func(params rules.GetRuleByNameParams) middleware.Responder {
+		RulesGetRuleByNameHandler: rules.GetRuleByNameHandlerFunc(func(params rules.GetRuleByNameParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation RulesGetRuleByName has not yet been implemented")
 		}),
-		TriggersGetTriggerByNameHandler: triggers.GetTriggerByNameHandlerFunc(func(params triggers.GetTriggerByNameParams) middleware.Responder {
+		TriggersGetTriggerByNameHandler: triggers.GetTriggerByNameHandlerFunc(func(params triggers.GetTriggerByNameParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation TriggersGetTriggerByName has not yet been implemented")
 		}),
-		ActionsInvokeActionHandler: actions.InvokeActionHandlerFunc(func(params actions.InvokeActionParams) middleware.Responder {
+		ActionsInvokeActionHandler: actions.InvokeActionHandlerFunc(func(params actions.InvokeActionParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation ActionsInvokeAction has not yet been implemented")
 		}),
-		RulesSetStateHandler: rules.SetStateHandlerFunc(func(params rules.SetStateParams) middleware.Responder {
+		ActionsInvokeActionInPackageHandler: actions.InvokeActionInPackageHandlerFunc(func(params actions.InvokeActionInPackageParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation ActionsInvokeActionInPackage has not yet been implemented")
+		}),
+		RulesSetStateHandler: rules.SetStateHandlerFunc(func(params rules.SetStateParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation RulesSetState has not yet been implemented")
 		}),
-		ActionsUpdateActionHandler: actions.UpdateActionHandlerFunc(func(params actions.UpdateActionParams) middleware.Responder {
+		ActionsUpdateActionHandler: actions.UpdateActionHandlerFunc(func(params actions.UpdateActionParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation ActionsUpdateAction has not yet been implemented")
 		}),
-		PackagesUpdatePackageHandler: packages.UpdatePackageHandlerFunc(func(params packages.UpdatePackageParams) middleware.Responder {
+		ActionsUpdateActionInPackageHandler: actions.UpdateActionInPackageHandlerFunc(func(params actions.UpdateActionInPackageParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation ActionsUpdateActionInPackage has not yet been implemented")
+		}),
+		PackagesUpdatePackageHandler: packages.UpdatePackageHandlerFunc(func(params packages.UpdatePackageParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation PackagesUpdatePackage has not yet been implemented")
 		}),
-		RulesUpdateRuleHandler: rules.UpdateRuleHandlerFunc(func(params rules.UpdateRuleParams) middleware.Responder {
+		RulesUpdateRuleHandler: rules.UpdateRuleHandlerFunc(func(params rules.UpdateRuleParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation RulesUpdateRule has not yet been implemented")
 		}),
-		TriggersUpdateTriggerHandler: triggers.UpdateTriggerHandlerFunc(func(params triggers.UpdateTriggerParams) middleware.Responder {
+		TriggersUpdateTriggerHandler: triggers.UpdateTriggerHandlerFunc(func(params triggers.UpdateTriggerParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation TriggersUpdateTrigger has not yet been implemented")
 		}),
+
+		// Applies when the Authorization header is set with the Basic scheme
+		BasicAuthAuth: func(user string, pass string) (*models.Principal, error) {
+			return nil, errors.NotImplemented("basic auth  (basicAuth) has not yet been implemented")
+		},
+
+		// default authorizer is authorized meaning no requests are blocked
+		APIAuthorizer: security.Authorized(),
 	}
 }
 
@@ -147,12 +181,29 @@ type KwskAPI struct {
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer runtime.Producer
 
+	// BasicAuthAuth registers a function that takes username and password and returns a principal
+	// it performs authentication with basic auth
+	BasicAuthAuth func(string, string) (*models.Principal, error)
+
+	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
+	APIAuthorizer runtime.Authorizer
+
+	// ActionsDeleteWebNamespacePackageNameActionNameExtensionHandler sets the operation handler for the delete web namespace package name action name extension operation
+	ActionsDeleteWebNamespacePackageNameActionNameExtensionHandler actions.DeleteWebNamespacePackageNameActionNameExtensionHandler
 	// ActivationsGetNamespacesNamespaceActivationsActivationidLogsHandler sets the operation handler for the get namespaces namespace activations activationid logs operation
 	ActivationsGetNamespacesNamespaceActivationsActivationidLogsHandler activations.GetNamespacesNamespaceActivationsActivationidLogsHandler
 	// ActivationsGetNamespacesNamespaceActivationsActivationidResultHandler sets the operation handler for the get namespaces namespace activations activationid result operation
 	ActivationsGetNamespacesNamespaceActivationsActivationidResultHandler activations.GetNamespacesNamespaceActivationsActivationidResultHandler
+	// ActionsGetWebNamespacePackageNameActionNameExtensionHandler sets the operation handler for the get web namespace package name action name extension operation
+	ActionsGetWebNamespacePackageNameActionNameExtensionHandler actions.GetWebNamespacePackageNameActionNameExtensionHandler
+	// ActionsPostWebNamespacePackageNameActionNameExtensionHandler sets the operation handler for the post web namespace package name action name extension operation
+	ActionsPostWebNamespacePackageNameActionNameExtensionHandler actions.PostWebNamespacePackageNameActionNameExtensionHandler
+	// ActionsPutWebNamespacePackageNameActionNameExtensionHandler sets the operation handler for the put web namespace package name action name extension operation
+	ActionsPutWebNamespacePackageNameActionNameExtensionHandler actions.PutWebNamespacePackageNameActionNameExtensionHandler
 	// ActionsDeleteActionHandler sets the operation handler for the delete action operation
 	ActionsDeleteActionHandler actions.DeleteActionHandler
+	// ActionsDeleteActionInPackageHandler sets the operation handler for the delete action in package operation
+	ActionsDeleteActionInPackageHandler actions.DeleteActionInPackageHandler
 	// PackagesDeletePackageHandler sets the operation handler for the delete package operation
 	PackagesDeletePackageHandler packages.DeletePackageHandler
 	// RulesDeleteRuleHandler sets the operation handler for the delete rule operation
@@ -163,6 +214,8 @@ type KwskAPI struct {
 	TriggersFireTriggerHandler triggers.FireTriggerHandler
 	// ActionsGetActionByNameHandler sets the operation handler for the get action by name operation
 	ActionsGetActionByNameHandler actions.GetActionByNameHandler
+	// ActionsGetActionInPackageByNameHandler sets the operation handler for the get action in package by name operation
+	ActionsGetActionInPackageByNameHandler actions.GetActionInPackageByNameHandler
 	// ActivationsGetActivationByIDHandler sets the operation handler for the get activation by Id operation
 	ActivationsGetActivationByIDHandler activations.GetActivationByIDHandler
 	// ActivationsGetActivationsHandler sets the operation handler for the get activations operation
@@ -185,10 +238,14 @@ type KwskAPI struct {
 	TriggersGetTriggerByNameHandler triggers.GetTriggerByNameHandler
 	// ActionsInvokeActionHandler sets the operation handler for the invoke action operation
 	ActionsInvokeActionHandler actions.InvokeActionHandler
+	// ActionsInvokeActionInPackageHandler sets the operation handler for the invoke action in package operation
+	ActionsInvokeActionInPackageHandler actions.InvokeActionInPackageHandler
 	// RulesSetStateHandler sets the operation handler for the set state operation
 	RulesSetStateHandler rules.SetStateHandler
 	// ActionsUpdateActionHandler sets the operation handler for the update action operation
 	ActionsUpdateActionHandler actions.UpdateActionHandler
+	// ActionsUpdateActionInPackageHandler sets the operation handler for the update action in package operation
+	ActionsUpdateActionInPackageHandler actions.UpdateActionInPackageHandler
 	// PackagesUpdatePackageHandler sets the operation handler for the update package operation
 	PackagesUpdatePackageHandler packages.UpdatePackageHandler
 	// RulesUpdateRuleHandler sets the operation handler for the update rule operation
@@ -258,6 +315,14 @@ func (o *KwskAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.BasicAuthAuth == nil {
+		unregistered = append(unregistered, "BasicAuthAuth")
+	}
+
+	if o.ActionsDeleteWebNamespacePackageNameActionNameExtensionHandler == nil {
+		unregistered = append(unregistered, "actions.DeleteWebNamespacePackageNameActionNameExtensionHandler")
+	}
+
 	if o.ActivationsGetNamespacesNamespaceActivationsActivationidLogsHandler == nil {
 		unregistered = append(unregistered, "activations.GetNamespacesNamespaceActivationsActivationidLogsHandler")
 	}
@@ -266,8 +331,24 @@ func (o *KwskAPI) Validate() error {
 		unregistered = append(unregistered, "activations.GetNamespacesNamespaceActivationsActivationidResultHandler")
 	}
 
+	if o.ActionsGetWebNamespacePackageNameActionNameExtensionHandler == nil {
+		unregistered = append(unregistered, "actions.GetWebNamespacePackageNameActionNameExtensionHandler")
+	}
+
+	if o.ActionsPostWebNamespacePackageNameActionNameExtensionHandler == nil {
+		unregistered = append(unregistered, "actions.PostWebNamespacePackageNameActionNameExtensionHandler")
+	}
+
+	if o.ActionsPutWebNamespacePackageNameActionNameExtensionHandler == nil {
+		unregistered = append(unregistered, "actions.PutWebNamespacePackageNameActionNameExtensionHandler")
+	}
+
 	if o.ActionsDeleteActionHandler == nil {
 		unregistered = append(unregistered, "actions.DeleteActionHandler")
+	}
+
+	if o.ActionsDeleteActionInPackageHandler == nil {
+		unregistered = append(unregistered, "actions.DeleteActionInPackageHandler")
 	}
 
 	if o.PackagesDeletePackageHandler == nil {
@@ -288,6 +369,10 @@ func (o *KwskAPI) Validate() error {
 
 	if o.ActionsGetActionByNameHandler == nil {
 		unregistered = append(unregistered, "actions.GetActionByNameHandler")
+	}
+
+	if o.ActionsGetActionInPackageByNameHandler == nil {
+		unregistered = append(unregistered, "actions.GetActionInPackageByNameHandler")
 	}
 
 	if o.ActivationsGetActivationByIDHandler == nil {
@@ -334,12 +419,20 @@ func (o *KwskAPI) Validate() error {
 		unregistered = append(unregistered, "actions.InvokeActionHandler")
 	}
 
+	if o.ActionsInvokeActionInPackageHandler == nil {
+		unregistered = append(unregistered, "actions.InvokeActionInPackageHandler")
+	}
+
 	if o.RulesSetStateHandler == nil {
 		unregistered = append(unregistered, "rules.SetStateHandler")
 	}
 
 	if o.ActionsUpdateActionHandler == nil {
 		unregistered = append(unregistered, "actions.UpdateActionHandler")
+	}
+
+	if o.ActionsUpdateActionInPackageHandler == nil {
+		unregistered = append(unregistered, "actions.UpdateActionInPackageHandler")
 	}
 
 	if o.PackagesUpdatePackageHandler == nil {
@@ -369,14 +462,26 @@ func (o *KwskAPI) ServeErrorFor(operationID string) func(http.ResponseWriter, *h
 // AuthenticatorsFor gets the authenticators for the specified security schemes
 func (o *KwskAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) map[string]runtime.Authenticator {
 
-	return nil
+	result := make(map[string]runtime.Authenticator)
+	for name, scheme := range schemes {
+		switch name {
+
+		case "basicAuth":
+			_ = scheme
+			result[name] = o.BasicAuthenticator(func(username, password string) (interface{}, error) {
+				return o.BasicAuthAuth(username, password)
+			})
+
+		}
+	}
+	return result
 
 }
 
 // Authorizer returns the registered authorizer
 func (o *KwskAPI) Authorizer() runtime.Authorizer {
 
-	return nil
+	return o.APIAuthorizer
 
 }
 
@@ -452,6 +557,11 @@ func (o *KwskAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/web/{namespace}/{packageName}/{actionName}.{extension}"] = actions.NewDeleteWebNamespacePackageNameActionNameExtension(o.context, o.ActionsDeleteWebNamespacePackageNameActionNameExtensionHandler)
+
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -462,10 +572,30 @@ func (o *KwskAPI) initHandlerCache() {
 	}
 	o.handlers["GET"]["/namespaces/{namespace}/activations/{activationid}/result"] = activations.NewGetNamespacesNamespaceActivationsActivationidResult(o.context, o.ActivationsGetNamespacesNamespaceActivationsActivationidResultHandler)
 
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/web/{namespace}/{packageName}/{actionName}.{extension}"] = actions.NewGetWebNamespacePackageNameActionNameExtension(o.context, o.ActionsGetWebNamespacePackageNameActionNameExtensionHandler)
+
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/web/{namespace}/{packageName}/{actionName}.{extension}"] = actions.NewPostWebNamespacePackageNameActionNameExtension(o.context, o.ActionsPostWebNamespacePackageNameActionNameExtensionHandler)
+
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/web/{namespace}/{packageName}/{actionName}.{extension}"] = actions.NewPutWebNamespacePackageNameActionNameExtension(o.context, o.ActionsPutWebNamespacePackageNameActionNameExtensionHandler)
+
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/namespaces/{namespace}/actions/{actionName}"] = actions.NewDeleteAction(o.context, o.ActionsDeleteActionHandler)
+
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/namespaces/{namespace}/actions/{packageName}/{actionName}"] = actions.NewDeleteActionInPackage(o.context, o.ActionsDeleteActionInPackageHandler)
 
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
@@ -491,6 +621,11 @@ func (o *KwskAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/namespaces/{namespace}/actions/{actionName}"] = actions.NewGetActionByName(o.context, o.ActionsGetActionByNameHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/namespaces/{namespace}/actions/{packageName}/{actionName}"] = actions.NewGetActionInPackageByName(o.context, o.ActionsGetActionInPackageByNameHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
@@ -550,12 +685,22 @@ func (o *KwskAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/namespaces/{namespace}/actions/{packageName}/{actionName}"] = actions.NewInvokeActionInPackage(o.context, o.ActionsInvokeActionInPackageHandler)
+
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/namespaces/{namespace}/rules/{ruleName}"] = rules.NewSetState(o.context, o.RulesSetStateHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/namespaces/{namespace}/actions/{actionName}"] = actions.NewUpdateAction(o.context, o.ActionsUpdateActionHandler)
+
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/namespaces/{namespace}/actions/{packageName}/{actionName}"] = actions.NewUpdateActionInPackage(o.context, o.ActionsUpdateActionInPackageHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)

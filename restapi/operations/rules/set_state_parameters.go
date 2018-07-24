@@ -6,14 +6,16 @@ package rules
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/validate"
 
 	strfmt "github.com/go-openapi/strfmt"
+
+	models "github.com/projectodd/kwsk/models"
 )
 
 // NewSetStateParams creates a new SetStateParams object
@@ -42,11 +44,11 @@ type SetStateParams struct {
 	  In: path
 	*/
 	RuleName string
-	/*Set state to enable or disable
+	/*Set status to active or inactive
 	  Required: true
-	  In: query
+	  In: body
 	*/
-	State string
+	Status *models.SetStateParamsBody
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -58,8 +60,6 @@ func (o *SetStateParams) BindRequest(r *http.Request, route *middleware.MatchedR
 
 	o.HTTPRequest = r
 
-	qs := runtime.Values(r.URL.Query())
-
 	rNamespace, rhkNamespace, _ := route.Params.GetOK("namespace")
 	if err := o.bindNamespace(rNamespace, rhkNamespace, route.Formats); err != nil {
 		res = append(res, err)
@@ -70,11 +70,29 @@ func (o *SetStateParams) BindRequest(r *http.Request, route *middleware.MatchedR
 		res = append(res, err)
 	}
 
-	qState, qhkState, _ := qs.GetOK("state")
-	if err := o.bindState(qState, qhkState, route.Formats); err != nil {
-		res = append(res, err)
-	}
+	if runtime.HasBody(r) {
+		defer r.Body.Close()
+		var body models.SetStateParamsBody
+		if err := route.Consumer.Consume(r.Body, &body); err != nil {
+			if err == io.EOF {
+				res = append(res, errors.Required("status", "body"))
+			} else {
+				res = append(res, errors.NewParseError("status", "body", "", err))
+			}
+		} else {
 
+			// validate body object
+			if err := body.Validate(route.Formats); err != nil {
+				res = append(res, err)
+			}
+
+			if len(res) == 0 {
+				o.Status = &body
+			}
+		}
+	} else {
+		res = append(res, errors.Required("status", "body"))
+	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -105,39 +123,6 @@ func (o *SetStateParams) bindRuleName(rawData []string, hasKey bool, formats str
 	// Parameter is provided by construction from the route
 
 	o.RuleName = raw
-
-	return nil
-}
-
-func (o *SetStateParams) bindState(rawData []string, hasKey bool, formats strfmt.Registry) error {
-	if !hasKey {
-		return errors.Required("state", "query")
-	}
-	var raw string
-	if len(rawData) > 0 {
-		raw = rawData[len(rawData)-1]
-	}
-
-	// Required: true
-	// AllowEmptyValue: false
-	if err := validate.RequiredString("state", "query", raw); err != nil {
-		return err
-	}
-
-	o.State = raw
-
-	if err := o.validateState(formats); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (o *SetStateParams) validateState(formats strfmt.Registry) error {
-
-	if err := validate.Enum("state", "query", o.State, []interface{}{"disabled", "enabled"}); err != nil {
-		return err
-	}
 
 	return nil
 }

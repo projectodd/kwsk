@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/projectodd/kwsk/models"
 )
 
 // GetAllNamespacesHandlerFunc turns a function with the right signature into a get all namespaces handler
-type GetAllNamespacesHandlerFunc func(GetAllNamespacesParams) middleware.Responder
+type GetAllNamespacesHandlerFunc func(GetAllNamespacesParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetAllNamespacesHandlerFunc) Handle(params GetAllNamespacesParams) middleware.Responder {
-	return fn(params)
+func (fn GetAllNamespacesHandlerFunc) Handle(params GetAllNamespacesParams, principal *models.Principal) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetAllNamespacesHandler interface for that can handle valid get all namespaces params
 type GetAllNamespacesHandler interface {
-	Handle(GetAllNamespacesParams) middleware.Responder
+	Handle(GetAllNamespacesParams, *models.Principal) middleware.Responder
 }
 
 // NewGetAllNamespaces creates a new http.Handler for the get all namespaces operation
@@ -48,12 +50,25 @@ func (o *GetAllNamespaces) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	var Params = NewGetAllNamespacesParams()
 
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		r = aCtx
+	}
+	var principal *models.Principal
+	if uprinc != nil {
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

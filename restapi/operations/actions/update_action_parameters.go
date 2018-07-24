@@ -40,7 +40,7 @@ type UpdateActionParams struct {
 	  In: body
 	*/
 	Action *models.ActionPut
-	/*Name of action
+	/*Name of action to fetch
 	  Required: true
 	  In: path
 	*/

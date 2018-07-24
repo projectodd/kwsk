@@ -19,11 +19,17 @@ import (
 // swagger:model Package
 type Package struct {
 
+	// Actions contained in this package
+	Actions []*PackageAction `json:"actions"`
+
 	// annotations on the item
 	Annotations []*KeyValue `json:"annotations"`
 
 	// binding
 	Binding *PackageBinding `json:"binding,omitempty"`
+
+	// Feeds contained in this package
+	Feeds []interface{} `json:"feeds"`
 
 	// Name of the item
 	// Required: true
@@ -36,12 +42,14 @@ type Package struct {
 	Namespace *string `json:"namespace"`
 
 	// parameter for the package
-	// Required: true
 	Parameters []*KeyValue `json:"parameters"`
 
 	// Whether to publish the item or not
 	// Required: true
 	Publish *bool `json:"publish"`
+
+	// Time when the package was updated
+	Updated int64 `json:"updated,omitempty"`
 
 	// Semantic version of the item
 	// Required: true
@@ -52,6 +60,10 @@ type Package struct {
 // Validate validates this package
 func (m *Package) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.validateActions(formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := m.validateAnnotations(formats); err != nil {
 		res = append(res, err)
@@ -84,6 +96,31 @@ func (m *Package) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *Package) validateActions(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Actions) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Actions); i++ {
+		if swag.IsZero(m.Actions[i]) { // not required
+			continue
+		}
+
+		if m.Actions[i] != nil {
+			if err := m.Actions[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("actions" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -158,8 +195,8 @@ func (m *Package) validateNamespace(formats strfmt.Registry) error {
 
 func (m *Package) validateParameters(formats strfmt.Registry) error {
 
-	if err := validate.Required("parameters", "body", m.Parameters); err != nil {
-		return err
+	if swag.IsZero(m.Parameters) { // not required
+		return nil
 	}
 
 	for i := 0; i < len(m.Parameters); i++ {

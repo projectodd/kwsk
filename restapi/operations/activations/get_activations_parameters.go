@@ -36,7 +36,7 @@ type GetActivationsParams struct {
 	  In: query
 	*/
 	Docs *bool
-	/*Number of entities to include in the result.
+	/*Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.
 	  In: query
 	*/
 	Limit *int64

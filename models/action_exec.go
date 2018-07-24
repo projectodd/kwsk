@@ -19,8 +19,14 @@ import (
 // swagger:model ActionExec
 type ActionExec struct {
 
+	// Whether the action has a binary attachment or not
+	Binary bool `json:"binary,omitempty"`
+
 	// The code to execute when kind is not 'blackbox'
 	Code string `json:"code,omitempty"`
+
+	// For sequence actions, the individual action components
+	Components []string `json:"components"`
 
 	// container image name when kind is 'blackbox'
 	Image string `json:"image,omitempty"`
@@ -29,9 +35,11 @@ type ActionExec struct {
 	Init string `json:"init,omitempty"`
 
 	// the type of action
-	// Required: true
-	// Enum: [nodejs:6 nodejs:8 nodejs:default python:2 python:3 swift:3.1.1 java blackbox]
-	Kind *string `json:"kind"`
+	// Enum: [nodejs:6 nodejs:8 nodejs:default python:2 python:3 python:default php:7.1 php:7.2 swift:3.1.1 swift:4.1 java java:default blackbox sequence]
+	Kind string `json:"kind,omitempty"`
+
+	// main entrypoint of the action code
+	Main string `json:"main,omitempty"`
 }
 
 // Validate validates this action exec
@@ -52,7 +60,7 @@ var actionExecTypeKindPropEnum []interface{}
 
 func init() {
 	var res []string
-	if err := json.Unmarshal([]byte(`["nodejs:6","nodejs:8","nodejs:default","python:2","python:3","swift:3.1.1","java","blackbox"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["nodejs:6","nodejs:8","nodejs:default","python:2","python:3","python:default","php:7.1","php:7.2","swift:3.1.1","swift:4.1","java","java:default","blackbox","sequence"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {
@@ -77,14 +85,32 @@ const (
 	// ActionExecKindPython3 captures enum value "python:3"
 	ActionExecKindPython3 string = "python:3"
 
+	// ActionExecKindPythonDefault captures enum value "python:default"
+	ActionExecKindPythonDefault string = "python:default"
+
+	// ActionExecKindPhp71 captures enum value "php:7.1"
+	ActionExecKindPhp71 string = "php:7.1"
+
+	// ActionExecKindPhp72 captures enum value "php:7.2"
+	ActionExecKindPhp72 string = "php:7.2"
+
 	// ActionExecKindSwift311 captures enum value "swift:3.1.1"
 	ActionExecKindSwift311 string = "swift:3.1.1"
+
+	// ActionExecKindSwift41 captures enum value "swift:4.1"
+	ActionExecKindSwift41 string = "swift:4.1"
 
 	// ActionExecKindJava captures enum value "java"
 	ActionExecKindJava string = "java"
 
+	// ActionExecKindJavaDefault captures enum value "java:default"
+	ActionExecKindJavaDefault string = "java:default"
+
 	// ActionExecKindBlackbox captures enum value "blackbox"
 	ActionExecKindBlackbox string = "blackbox"
+
+	// ActionExecKindSequence captures enum value "sequence"
+	ActionExecKindSequence string = "sequence"
 )
 
 // prop value enum
@@ -97,12 +123,12 @@ func (m *ActionExec) validateKindEnum(path, location string, value string) error
 
 func (m *ActionExec) validateKind(formats strfmt.Registry) error {
 
-	if err := validate.Required("kind", "body", m.Kind); err != nil {
-		return err
+	if swag.IsZero(m.Kind) { // not required
+		return nil
 	}
 
 	// value enum
-	if err := m.validateKindEnum("kind", "body", *m.Kind); err != nil {
+	if err := m.validateKindEnum("kind", "body", m.Kind); err != nil {
 		return err
 	}
 

@@ -16,16 +16,11 @@ import (
 // SetStateOKCode is the HTTP code returned for type SetStateOK
 const SetStateOKCode int = 200
 
-/*SetStateOK Updated Item
+/*SetStateOK Rule has been enabled or disabled
 
 swagger:response setStateOK
 */
 type SetStateOK struct {
-
-	/*
-	  In: Body
-	*/
-	Payload *models.ItemID `json:"body,omitempty"`
 }
 
 // NewSetStateOK creates SetStateOK with default headers values
@@ -34,27 +29,12 @@ func NewSetStateOK() *SetStateOK {
 	return &SetStateOK{}
 }
 
-// WithPayload adds the payload to the set state o k response
-func (o *SetStateOK) WithPayload(payload *models.ItemID) *SetStateOK {
-	o.Payload = payload
-	return o
-}
-
-// SetPayload sets the payload to the set state o k response
-func (o *SetStateOK) SetPayload(payload *models.ItemID) {
-	o.Payload = payload
-}
-
 // WriteResponse to the client
 func (o *SetStateOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
+	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+
 	rw.WriteHeader(200)
-	if o.Payload != nil {
-		payload := o.Payload
-		if err := producer.Produce(rw, payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
-	}
 }
 
 // SetStateAcceptedCode is the HTTP code returned for type SetStateAccepted
@@ -161,6 +141,50 @@ func (o *SetStateUnauthorized) SetPayload(payload *models.ErrorMessage) {
 func (o *SetStateUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(401)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
+// SetStateNotFoundCode is the HTTP code returned for type SetStateNotFound
+const SetStateNotFoundCode int = 404
+
+/*SetStateNotFound Item not found
+
+swagger:response setStateNotFound
+*/
+type SetStateNotFound struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.ErrorMessage `json:"body,omitempty"`
+}
+
+// NewSetStateNotFound creates SetStateNotFound with default headers values
+func NewSetStateNotFound() *SetStateNotFound {
+
+	return &SetStateNotFound{}
+}
+
+// WithPayload adds the payload to the set state not found response
+func (o *SetStateNotFound) WithPayload(payload *models.ErrorMessage) *SetStateNotFound {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the set state not found response
+func (o *SetStateNotFound) SetPayload(payload *models.ErrorMessage) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *SetStateNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(404)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {

@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ActionPut A restricted Action view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).
+// ActionPut A restricted Action view used when updating an Action
 // swagger:model ActionPut
 type ActionPut struct {
 
@@ -27,6 +27,14 @@ type ActionPut struct {
 
 	// limits
 	Limits *ActionLimits `json:"limits,omitempty"`
+
+	// Name of the item
+	// Min Length: 1
+	Name string `json:"name,omitempty"`
+
+	// Namespace of the item
+	// Min Length: 1
+	Namespace string `json:"namespace,omitempty"`
 
 	// parameter bindings included in the context passed to the action
 	Parameters []*KeyValue `json:"parameters"`
@@ -52,6 +60,14 @@ func (m *ActionPut) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateLimits(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateNamespace(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -125,6 +141,32 @@ func (m *ActionPut) validateLimits(formats strfmt.Registry) error {
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *ActionPut) validateName(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Name) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("name", "body", string(m.Name), 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *ActionPut) validateNamespace(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Namespace) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("namespace", "body", string(m.Namespace), 1); err != nil {
+		return err
 	}
 
 	return nil

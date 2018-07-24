@@ -17,8 +17,6 @@ type SetStateURL struct {
 	Namespace string
 	RuleName  string
 
-	State string
-
 	_basePath string
 	// avoid unkeyed usage
 	_ struct{}
@@ -64,15 +62,6 @@ func (o *SetStateURL) Build() (*url.URL, error) {
 		_basePath = "/api/v1"
 	}
 	result.Path = golangswaggerpaths.Join(_basePath, _path)
-
-	qs := make(url.Values)
-
-	state := o.State
-	if state != "" {
-		qs.Set("state", state)
-	}
-
-	result.RawQuery = qs.Encode()
 
 	return &result, nil
 }

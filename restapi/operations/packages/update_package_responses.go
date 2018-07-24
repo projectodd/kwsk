@@ -16,7 +16,7 @@ import (
 // UpdatePackageOKCode is the HTTP code returned for type UpdatePackageOK
 const UpdatePackageOKCode int = 200
 
-/*UpdatePackageOK Updated Item
+/*UpdatePackageOK Updated Package
 
 swagger:response updatePackageOK
 */
@@ -25,7 +25,7 @@ type UpdatePackageOK struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ItemID `json:"body,omitempty"`
+	Payload *models.Package `json:"body,omitempty"`
 }
 
 // NewUpdatePackageOK creates UpdatePackageOK with default headers values
@@ -35,13 +35,13 @@ func NewUpdatePackageOK() *UpdatePackageOK {
 }
 
 // WithPayload adds the payload to the update package o k response
-func (o *UpdatePackageOK) WithPayload(payload *models.ItemID) *UpdatePackageOK {
+func (o *UpdatePackageOK) WithPayload(payload *models.Package) *UpdatePackageOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the update package o k response
-func (o *UpdatePackageOK) SetPayload(payload *models.ItemID) {
+func (o *UpdatePackageOK) SetPayload(payload *models.Package) {
 	o.Payload = payload
 }
 
@@ -137,6 +137,50 @@ func (o *UpdatePackageUnauthorized) SetPayload(payload *models.ErrorMessage) {
 func (o *UpdatePackageUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(401)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
+// UpdatePackageForbiddenCode is the HTTP code returned for type UpdatePackageForbidden
+const UpdatePackageForbiddenCode int = 403
+
+/*UpdatePackageForbidden Unauthorized request
+
+swagger:response updatePackageForbidden
+*/
+type UpdatePackageForbidden struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.ErrorMessage `json:"body,omitempty"`
+}
+
+// NewUpdatePackageForbidden creates UpdatePackageForbidden with default headers values
+func NewUpdatePackageForbidden() *UpdatePackageForbidden {
+
+	return &UpdatePackageForbidden{}
+}
+
+// WithPayload adds the payload to the update package forbidden response
+func (o *UpdatePackageForbidden) WithPayload(payload *models.ErrorMessage) *UpdatePackageForbidden {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the update package forbidden response
+func (o *UpdatePackageForbidden) SetPayload(payload *models.ErrorMessage) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *UpdatePackageForbidden) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(403)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {

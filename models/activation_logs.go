@@ -16,7 +16,7 @@ import (
 type ActivationLogs struct {
 
 	// Interleaved standard output and error of an activation
-	Logs string `json:"logs,omitempty"`
+	Logs []string `json:"logs"`
 }
 
 // Validate validates this activation logs

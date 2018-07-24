@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/projectodd/kwsk/models"
 )
 
 // DeleteRuleHandlerFunc turns a function with the right signature into a delete rule handler
-type DeleteRuleHandlerFunc func(DeleteRuleParams) middleware.Responder
+type DeleteRuleHandlerFunc func(DeleteRuleParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteRuleHandlerFunc) Handle(params DeleteRuleParams) middleware.Responder {
-	return fn(params)
+func (fn DeleteRuleHandlerFunc) Handle(params DeleteRuleParams, principal *models.Principal) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteRuleHandler interface for that can handle valid delete rule params
 type DeleteRuleHandler interface {
-	Handle(DeleteRuleParams) middleware.Responder
+	Handle(DeleteRuleParams, *models.Principal) middleware.Responder
 }
 
 // NewDeleteRule creates a new http.Handler for the delete rule operation
@@ -48,12 +50,25 @@ func (o *DeleteRule) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	var Params = NewDeleteRuleParams()
 
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		r = aCtx
+	}
+	var principal *models.Principal
+	if uprinc != nil {
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

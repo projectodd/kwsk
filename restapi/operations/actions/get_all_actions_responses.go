@@ -25,7 +25,7 @@ type GetAllActionsOK struct {
 	/*
 	  In: Body
 	*/
-	Payload []*models.EntityBrief `json:"body,omitempty"`
+	Payload []*models.Action `json:"body,omitempty"`
 }
 
 // NewGetAllActionsOK creates GetAllActionsOK with default headers values
@@ -35,13 +35,13 @@ func NewGetAllActionsOK() *GetAllActionsOK {
 }
 
 // WithPayload adds the payload to the get all actions o k response
-func (o *GetAllActionsOK) WithPayload(payload []*models.EntityBrief) *GetAllActionsOK {
+func (o *GetAllActionsOK) WithPayload(payload []*models.Action) *GetAllActionsOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get all actions o k response
-func (o *GetAllActionsOK) SetPayload(payload []*models.EntityBrief) {
+func (o *GetAllActionsOK) SetPayload(payload []*models.Action) {
 	o.Payload = payload
 }
 
@@ -51,7 +51,7 @@ func (o *GetAllActionsOK) WriteResponse(rw http.ResponseWriter, producer runtime
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make([]*models.EntityBrief, 0, 50)
+		payload = make([]*models.Action, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

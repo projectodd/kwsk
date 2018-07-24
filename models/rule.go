@@ -7,6 +7,7 @@ package models
 
 import (
 	"encoding/json"
+	"strconv"
 
 	strfmt "github.com/go-openapi/strfmt"
 
@@ -19,10 +20,12 @@ import (
 // swagger:model Rule
 type Rule struct {
 
-	// Name of the action
+	// action
 	// Required: true
-	// Min Length: 1
-	Action *string `json:"action"`
+	Action *PathName `json:"action"`
+
+	// annotations on the item
+	Annotations []*KeyValue `json:"annotations"`
 
 	// Name of the item
 	// Required: true
@@ -39,14 +42,12 @@ type Rule struct {
 	Publish *bool `json:"publish"`
 
 	// Status of a rule
-	// Required: true
 	// Enum: [active inactive activating deactivating]
-	Status *string `json:"status"`
+	Status string `json:"status,omitempty"`
 
-	// Name of the trigger
+	// trigger
 	// Required: true
-	// Min Length: 1
-	Trigger *string `json:"trigger"`
+	Trigger *PathName `json:"trigger"`
 
 	// Semantic version of the item
 	// Required: true
@@ -59,6 +60,10 @@ func (m *Rule) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateAction(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateAnnotations(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -98,8 +103,38 @@ func (m *Rule) validateAction(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("action", "body", string(*m.Action), 1); err != nil {
-		return err
+	if m.Action != nil {
+		if err := m.Action.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("action")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Rule) validateAnnotations(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Annotations) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Annotations); i++ {
+		if swag.IsZero(m.Annotations[i]) { // not required
+			continue
+		}
+
+		if m.Annotations[i] != nil {
+			if err := m.Annotations[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("annotations" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -177,12 +212,12 @@ func (m *Rule) validateStatusEnum(path, location string, value string) error {
 
 func (m *Rule) validateStatus(formats strfmt.Registry) error {
 
-	if err := validate.Required("status", "body", m.Status); err != nil {
-		return err
+	if swag.IsZero(m.Status) { // not required
+		return nil
 	}
 
 	// value enum
-	if err := m.validateStatusEnum("status", "body", *m.Status); err != nil {
+	if err := m.validateStatusEnum("status", "body", m.Status); err != nil {
 		return err
 	}
 
@@ -195,8 +230,13 @@ func (m *Rule) validateTrigger(formats strfmt.Registry) error {
 		return err
 	}
 
-	if err := validate.MinLength("trigger", "body", string(*m.Trigger), 1); err != nil {
-		return err
+	if m.Trigger != nil {
+		if err := m.Trigger.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("trigger")
+			}
+			return err
+		}
 	}
 
 	return nil

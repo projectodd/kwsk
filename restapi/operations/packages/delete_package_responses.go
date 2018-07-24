@@ -125,6 +125,50 @@ func (o *DeletePackageNotFound) WriteResponse(rw http.ResponseWriter, producer r
 	}
 }
 
+// DeletePackageConflictCode is the HTTP code returned for type DeletePackageConflict
+const DeletePackageConflictCode int = 409
+
+/*DeletePackageConflict Conflicting item already exists
+
+swagger:response deletePackageConflict
+*/
+type DeletePackageConflict struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.ErrorMessage `json:"body,omitempty"`
+}
+
+// NewDeletePackageConflict creates DeletePackageConflict with default headers values
+func NewDeletePackageConflict() *DeletePackageConflict {
+
+	return &DeletePackageConflict{}
+}
+
+// WithPayload adds the payload to the delete package conflict response
+func (o *DeletePackageConflict) WithPayload(payload *models.ErrorMessage) *DeletePackageConflict {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the delete package conflict response
+func (o *DeletePackageConflict) SetPayload(payload *models.ErrorMessage) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *DeletePackageConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(409)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
 // DeletePackageInternalServerErrorCode is the HTTP code returned for type DeletePackageInternalServerError
 const DeletePackageInternalServerErrorCode int = 500
 

@@ -32,7 +32,7 @@ type GetAllPackagesParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*Number of entities to include in the result.
+	/*Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.
 	  In: query
 	*/
 	Limit *int64

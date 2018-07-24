@@ -21,11 +21,6 @@ const InvokeActionOKCode int = 200
 swagger:response invokeActionOK
 */
 type InvokeActionOK struct {
-
-	/*
-	  In: Body
-	*/
-	Payload *models.Activation `json:"body,omitempty"`
 }
 
 // NewInvokeActionOK creates InvokeActionOK with default headers values
@@ -34,27 +29,12 @@ func NewInvokeActionOK() *InvokeActionOK {
 	return &InvokeActionOK{}
 }
 
-// WithPayload adds the payload to the invoke action o k response
-func (o *InvokeActionOK) WithPayload(payload *models.Activation) *InvokeActionOK {
-	o.Payload = payload
-	return o
-}
-
-// SetPayload sets the payload to the invoke action o k response
-func (o *InvokeActionOK) SetPayload(payload *models.Activation) {
-	o.Payload = payload
-}
-
 // WriteResponse to the client
 func (o *InvokeActionOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
+	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+
 	rw.WriteHeader(200)
-	if o.Payload != nil {
-		payload := o.Payload
-		if err := producer.Produce(rw, payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
-	}
 }
 
 // InvokeActionAcceptedCode is the HTTP code returned for type InvokeActionAccepted
@@ -69,7 +49,7 @@ type InvokeActionAccepted struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ItemID `json:"body,omitempty"`
+	Payload *models.ActivationID `json:"body,omitempty"`
 }
 
 // NewInvokeActionAccepted creates InvokeActionAccepted with default headers values
@@ -79,13 +59,13 @@ func NewInvokeActionAccepted() *InvokeActionAccepted {
 }
 
 // WithPayload adds the payload to the invoke action accepted response
-func (o *InvokeActionAccepted) WithPayload(payload *models.ItemID) *InvokeActionAccepted {
+func (o *InvokeActionAccepted) WithPayload(payload *models.ActivationID) *InvokeActionAccepted {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the invoke action accepted response
-func (o *InvokeActionAccepted) SetPayload(payload *models.ItemID) {
+func (o *InvokeActionAccepted) SetPayload(payload *models.ActivationID) {
 	o.Payload = payload
 }
 
@@ -137,6 +117,50 @@ func (o *InvokeActionUnauthorized) SetPayload(payload *models.ErrorMessage) {
 func (o *InvokeActionUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(401)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
+// InvokeActionForbiddenCode is the HTTP code returned for type InvokeActionForbidden
+const InvokeActionForbiddenCode int = 403
+
+/*InvokeActionForbidden Unauthorized request
+
+swagger:response invokeActionForbidden
+*/
+type InvokeActionForbidden struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.ErrorMessage `json:"body,omitempty"`
+}
+
+// NewInvokeActionForbidden creates InvokeActionForbidden with default headers values
+func NewInvokeActionForbidden() *InvokeActionForbidden {
+
+	return &InvokeActionForbidden{}
+}
+
+// WithPayload adds the payload to the invoke action forbidden response
+func (o *InvokeActionForbidden) WithPayload(payload *models.ErrorMessage) *InvokeActionForbidden {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the invoke action forbidden response
+func (o *InvokeActionForbidden) SetPayload(payload *models.ErrorMessage) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *InvokeActionForbidden) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(403)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {
@@ -265,11 +289,6 @@ const InvokeActionBadGatewayCode int = 502
 swagger:response invokeActionBadGateway
 */
 type InvokeActionBadGateway struct {
-
-	/*
-	  In: Body
-	*/
-	Payload *models.Activation `json:"body,omitempty"`
 }
 
 // NewInvokeActionBadGateway creates InvokeActionBadGateway with default headers values
@@ -278,25 +297,10 @@ func NewInvokeActionBadGateway() *InvokeActionBadGateway {
 	return &InvokeActionBadGateway{}
 }
 
-// WithPayload adds the payload to the invoke action bad gateway response
-func (o *InvokeActionBadGateway) WithPayload(payload *models.Activation) *InvokeActionBadGateway {
-	o.Payload = payload
-	return o
-}
-
-// SetPayload sets the payload to the invoke action bad gateway response
-func (o *InvokeActionBadGateway) SetPayload(payload *models.Activation) {
-	o.Payload = payload
-}
-
 // WriteResponse to the client
 func (o *InvokeActionBadGateway) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
+	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
+
 	rw.WriteHeader(502)
-	if o.Payload != nil {
-		payload := o.Payload
-		if err := producer.Produce(rw, payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
-	}
 }

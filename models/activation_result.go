@@ -15,11 +15,14 @@ import (
 // swagger:model ActivationResult
 type ActivationResult struct {
 
+	// The return value from the activation
+	Result interface{} `json:"result,omitempty"`
+
 	// Exit status of the activation
 	Status string `json:"status,omitempty"`
 
-	// The return value from the activation
-	Value interface{} `json:"value,omitempty"`
+	// Whether the activation was successful or not
+	Success bool `json:"success,omitempty"`
 }
 
 // Validate validates this activation result

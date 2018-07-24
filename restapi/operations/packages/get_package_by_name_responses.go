@@ -145,6 +145,50 @@ func (o *GetPackageByNameNotFound) WriteResponse(rw http.ResponseWriter, produce
 	}
 }
 
+// GetPackageByNameConflictCode is the HTTP code returned for type GetPackageByNameConflict
+const GetPackageByNameConflictCode int = 409
+
+/*GetPackageByNameConflict Conflicting item already exists
+
+swagger:response getPackageByNameConflict
+*/
+type GetPackageByNameConflict struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.ErrorMessage `json:"body,omitempty"`
+}
+
+// NewGetPackageByNameConflict creates GetPackageByNameConflict with default headers values
+func NewGetPackageByNameConflict() *GetPackageByNameConflict {
+
+	return &GetPackageByNameConflict{}
+}
+
+// WithPayload adds the payload to the get package by name conflict response
+func (o *GetPackageByNameConflict) WithPayload(payload *models.ErrorMessage) *GetPackageByNameConflict {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get package by name conflict response
+func (o *GetPackageByNameConflict) SetPayload(payload *models.ErrorMessage) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *GetPackageByNameConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(409)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
 // GetPackageByNameInternalServerErrorCode is the HTTP code returned for type GetPackageByNameInternalServerError
 const GetPackageByNameInternalServerErrorCode int = 500
 
