@@ -16,7 +16,7 @@ import (
 // UpdateActionOKCode is the HTTP code returned for type UpdateActionOK
 const UpdateActionOKCode int = 200
 
-/*UpdateActionOK Updated Item
+/*UpdateActionOK Updated Action
 
 swagger:response updateActionOK
 */
@@ -25,7 +25,7 @@ type UpdateActionOK struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ItemID `json:"body,omitempty"`
+	Payload *models.Action `json:"body,omitempty"`
 }
 
 // NewUpdateActionOK creates UpdateActionOK with default headers values
@@ -35,13 +35,13 @@ func NewUpdateActionOK() *UpdateActionOK {
 }
 
 // WithPayload adds the payload to the update action o k response
-func (o *UpdateActionOK) WithPayload(payload *models.ItemID) *UpdateActionOK {
+func (o *UpdateActionOK) WithPayload(payload *models.Action) *UpdateActionOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the update action o k response
-func (o *UpdateActionOK) SetPayload(payload *models.ItemID) {
+func (o *UpdateActionOK) SetPayload(payload *models.Action) {
 	o.Payload = payload
 }
 
@@ -137,6 +137,50 @@ func (o *UpdateActionUnauthorized) SetPayload(payload *models.ErrorMessage) {
 func (o *UpdateActionUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(401)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
+// UpdateActionForbiddenCode is the HTTP code returned for type UpdateActionForbidden
+const UpdateActionForbiddenCode int = 403
+
+/*UpdateActionForbidden Unauthorized request
+
+swagger:response updateActionForbidden
+*/
+type UpdateActionForbidden struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.ErrorMessage `json:"body,omitempty"`
+}
+
+// NewUpdateActionForbidden creates UpdateActionForbidden with default headers values
+func NewUpdateActionForbidden() *UpdateActionForbidden {
+
+	return &UpdateActionForbidden{}
+}
+
+// WithPayload adds the payload to the update action forbidden response
+func (o *UpdateActionForbidden) WithPayload(payload *models.ErrorMessage) *UpdateActionForbidden {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the update action forbidden response
+func (o *UpdateActionForbidden) SetPayload(payload *models.ErrorMessage) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *UpdateActionForbidden) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(403)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {

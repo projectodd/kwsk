@@ -16,7 +16,7 @@ import (
 // UpdateRuleOKCode is the HTTP code returned for type UpdateRuleOK
 const UpdateRuleOKCode int = 200
 
-/*UpdateRuleOK Updated Item
+/*UpdateRuleOK Updated rule
 
 swagger:response updateRuleOK
 */
@@ -25,7 +25,7 @@ type UpdateRuleOK struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ItemID `json:"body,omitempty"`
+	Payload *models.Rule `json:"body,omitempty"`
 }
 
 // NewUpdateRuleOK creates UpdateRuleOK with default headers values
@@ -35,13 +35,13 @@ func NewUpdateRuleOK() *UpdateRuleOK {
 }
 
 // WithPayload adds the payload to the update rule o k response
-func (o *UpdateRuleOK) WithPayload(payload *models.ItemID) *UpdateRuleOK {
+func (o *UpdateRuleOK) WithPayload(payload *models.Rule) *UpdateRuleOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the update rule o k response
-func (o *UpdateRuleOK) SetPayload(payload *models.ItemID) {
+func (o *UpdateRuleOK) SetPayload(payload *models.Rule) {
 	o.Payload = payload
 }
 
@@ -137,6 +137,50 @@ func (o *UpdateRuleUnauthorized) SetPayload(payload *models.ErrorMessage) {
 func (o *UpdateRuleUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(401)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
+// UpdateRuleNotFoundCode is the HTTP code returned for type UpdateRuleNotFound
+const UpdateRuleNotFoundCode int = 404
+
+/*UpdateRuleNotFound Item not found
+
+swagger:response updateRuleNotFound
+*/
+type UpdateRuleNotFound struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.ErrorMessage `json:"body,omitempty"`
+}
+
+// NewUpdateRuleNotFound creates UpdateRuleNotFound with default headers values
+func NewUpdateRuleNotFound() *UpdateRuleNotFound {
+
+	return &UpdateRuleNotFound{}
+}
+
+// WithPayload adds the payload to the update rule not found response
+func (o *UpdateRuleNotFound) WithPayload(payload *models.ErrorMessage) *UpdateRuleNotFound {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the update rule not found response
+func (o *UpdateRuleNotFound) SetPayload(payload *models.ErrorMessage) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *UpdateRuleNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(404)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {

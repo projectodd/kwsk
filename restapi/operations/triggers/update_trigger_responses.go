@@ -16,7 +16,7 @@ import (
 // UpdateTriggerOKCode is the HTTP code returned for type UpdateTriggerOK
 const UpdateTriggerOKCode int = 200
 
-/*UpdateTriggerOK Updated Item
+/*UpdateTriggerOK Updated trigger
 
 swagger:response updateTriggerOK
 */
@@ -25,7 +25,7 @@ type UpdateTriggerOK struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ItemID `json:"body,omitempty"`
+	Payload *models.Trigger `json:"body,omitempty"`
 }
 
 // NewUpdateTriggerOK creates UpdateTriggerOK with default headers values
@@ -35,13 +35,13 @@ func NewUpdateTriggerOK() *UpdateTriggerOK {
 }
 
 // WithPayload adds the payload to the update trigger o k response
-func (o *UpdateTriggerOK) WithPayload(payload *models.ItemID) *UpdateTriggerOK {
+func (o *UpdateTriggerOK) WithPayload(payload *models.Trigger) *UpdateTriggerOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the update trigger o k response
-func (o *UpdateTriggerOK) SetPayload(payload *models.ItemID) {
+func (o *UpdateTriggerOK) SetPayload(payload *models.Trigger) {
 	o.Payload = payload
 }
 

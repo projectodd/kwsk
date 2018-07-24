@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// PackagePut A restricted Package view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).
+// PackagePut A restricted Package view used when updating a Package
 // swagger:model PackagePut
 type PackagePut struct {
 
@@ -24,6 +24,14 @@ type PackagePut struct {
 
 	// binding
 	Binding *PackageBinding `json:"binding,omitempty"`
+
+	// Name of the item
+	// Min Length: 1
+	Name string `json:"name,omitempty"`
+
+	// Namespace of the item
+	// Min Length: 1
+	Namespace string `json:"namespace,omitempty"`
 
 	// parameter for the package
 	Parameters []*KeyValue `json:"parameters"`
@@ -45,6 +53,14 @@ func (m *PackagePut) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateBinding(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateNamespace(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -100,6 +116,32 @@ func (m *PackagePut) validateBinding(formats strfmt.Registry) error {
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *PackagePut) validateName(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Name) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("name", "body", string(m.Name), 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *PackagePut) validateNamespace(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Namespace) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("namespace", "body", string(m.Namespace), 1); err != nil {
+		return err
 	}
 
 	return nil

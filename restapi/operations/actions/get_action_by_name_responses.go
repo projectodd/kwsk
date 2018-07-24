@@ -101,6 +101,50 @@ func (o *GetActionByNameUnauthorized) WriteResponse(rw http.ResponseWriter, prod
 	}
 }
 
+// GetActionByNameForbiddenCode is the HTTP code returned for type GetActionByNameForbidden
+const GetActionByNameForbiddenCode int = 403
+
+/*GetActionByNameForbidden Unauthorized request
+
+swagger:response getActionByNameForbidden
+*/
+type GetActionByNameForbidden struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.ErrorMessage `json:"body,omitempty"`
+}
+
+// NewGetActionByNameForbidden creates GetActionByNameForbidden with default headers values
+func NewGetActionByNameForbidden() *GetActionByNameForbidden {
+
+	return &GetActionByNameForbidden{}
+}
+
+// WithPayload adds the payload to the get action by name forbidden response
+func (o *GetActionByNameForbidden) WithPayload(payload *models.ErrorMessage) *GetActionByNameForbidden {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get action by name forbidden response
+func (o *GetActionByNameForbidden) SetPayload(payload *models.ErrorMessage) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *GetActionByNameForbidden) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(403)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
 // GetActionByNameNotFoundCode is the HTTP code returned for type GetActionByNameNotFound
 const GetActionByNameNotFoundCode int = 404
 

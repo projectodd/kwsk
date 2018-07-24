@@ -25,7 +25,7 @@ type GetAllTriggersOK struct {
 	/*
 	  In: Body
 	*/
-	Payload []*models.EntityBrief `json:"body,omitempty"`
+	Payload []*models.Trigger `json:"body,omitempty"`
 }
 
 // NewGetAllTriggersOK creates GetAllTriggersOK with default headers values
@@ -35,13 +35,13 @@ func NewGetAllTriggersOK() *GetAllTriggersOK {
 }
 
 // WithPayload adds the payload to the get all triggers o k response
-func (o *GetAllTriggersOK) WithPayload(payload []*models.EntityBrief) *GetAllTriggersOK {
+func (o *GetAllTriggersOK) WithPayload(payload []*models.Trigger) *GetAllTriggersOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get all triggers o k response
-func (o *GetAllTriggersOK) SetPayload(payload []*models.EntityBrief) {
+func (o *GetAllTriggersOK) SetPayload(payload []*models.Trigger) {
 	o.Payload = payload
 }
 
@@ -51,7 +51,7 @@ func (o *GetAllTriggersOK) WriteResponse(rw http.ResponseWriter, producer runtim
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make([]*models.EntityBrief, 0, 50)
+		payload = make([]*models.Trigger, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

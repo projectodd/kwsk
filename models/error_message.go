@@ -17,6 +17,9 @@ import (
 // swagger:model ErrorMessage
 type ErrorMessage struct {
 
+	// code
+	Code string `json:"code,omitempty"`
+
 	// error
 	// Required: true
 	Error *string `json:"error"`

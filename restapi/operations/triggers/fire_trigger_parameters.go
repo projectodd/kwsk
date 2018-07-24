@@ -6,7 +6,6 @@ package triggers
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"io"
 	"net/http"
 
 	"github.com/go-openapi/errors"
@@ -14,8 +13,6 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 
 	strfmt "github.com/go-openapi/strfmt"
-
-	models "github.com/projectodd/kwsk/models"
 )
 
 // NewFireTriggerParams creates a new FireTriggerParams object
@@ -40,10 +37,9 @@ type FireTriggerParams struct {
 	*/
 	Namespace string
 	/*The trigger payload
-	  Required: true
 	  In: body
 	*/
-	Payload *models.KeyValue
+	Payload interface{}
 	/*Name of trigger being fired
 	  Required: true
 	  In: path
@@ -67,26 +63,14 @@ func (o *FireTriggerParams) BindRequest(r *http.Request, route *middleware.Match
 
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
-		var body models.KeyValue
+		var body interface{}
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			if err == io.EOF {
-				res = append(res, errors.Required("payload", "body"))
-			} else {
-				res = append(res, errors.NewParseError("payload", "body", "", err))
-			}
+			res = append(res, errors.NewParseError("payload", "body", "", err))
 		} else {
 
-			// validate body object
-			if err := body.Validate(route.Formats); err != nil {
-				res = append(res, err)
-			}
-
-			if len(res) == 0 {
-				o.Payload = &body
-			}
+			// no validation on generic interface
+			o.Payload = body
 		}
-	} else {
-		res = append(res, errors.Required("payload", "body"))
 	}
 	rTriggerName, rhkTriggerName, _ := route.Params.GetOK("triggerName")
 	if err := o.bindTriggerName(rTriggerName, rhkTriggerName, route.Formats); err != nil {

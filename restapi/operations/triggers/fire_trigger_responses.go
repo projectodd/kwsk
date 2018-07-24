@@ -25,7 +25,7 @@ type FireTriggerAccepted struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.ItemID `json:"body,omitempty"`
+	Payload *models.ActivationID `json:"body,omitempty"`
 }
 
 // NewFireTriggerAccepted creates FireTriggerAccepted with default headers values
@@ -35,13 +35,13 @@ func NewFireTriggerAccepted() *FireTriggerAccepted {
 }
 
 // WithPayload adds the payload to the fire trigger accepted response
-func (o *FireTriggerAccepted) WithPayload(payload *models.ItemID) *FireTriggerAccepted {
+func (o *FireTriggerAccepted) WithPayload(payload *models.ActivationID) *FireTriggerAccepted {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the fire trigger accepted response
-func (o *FireTriggerAccepted) SetPayload(payload *models.ItemID) {
+func (o *FireTriggerAccepted) SetPayload(payload *models.ActivationID) {
 	o.Payload = payload
 }
 

@@ -23,8 +23,7 @@ type Trigger struct {
 	Annotations []*KeyValue `json:"annotations"`
 
 	// limits
-	// Required: true
-	Limits TriggerLimits `json:"limits"`
+	Limits TriggerLimits `json:"limits,omitempty"`
 
 	// Name of the item
 	// Required: true
@@ -37,7 +36,6 @@ type Trigger struct {
 	Namespace *string `json:"namespace"`
 
 	// parameter bindings for the trigger
-	// Required: true
 	Parameters []*KeyValue `json:"parameters"`
 
 	// Whether to publish the item or not
@@ -46,6 +44,9 @@ type Trigger struct {
 
 	// rules associated with the trigger
 	Rules interface{} `json:"rules,omitempty"`
+
+	// Time when the trigger was updated
+	Updated int64 `json:"updated,omitempty"`
 
 	// Semantic version of the item
 	// Required: true
@@ -58,10 +59,6 @@ func (m *Trigger) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateAnnotations(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateLimits(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -116,15 +113,6 @@ func (m *Trigger) validateAnnotations(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Trigger) validateLimits(formats strfmt.Registry) error {
-
-	if err := validate.Required("limits", "body", m.Limits); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (m *Trigger) validateName(formats strfmt.Registry) error {
 
 	if err := validate.Required("name", "body", m.Name); err != nil {
@@ -153,8 +141,8 @@ func (m *Trigger) validateNamespace(formats strfmt.Registry) error {
 
 func (m *Trigger) validateParameters(formats strfmt.Registry) error {
 
-	if err := validate.Required("parameters", "body", m.Parameters); err != nil {
-		return err
+	if swag.IsZero(m.Parameters) { // not required
+		return nil
 	}
 
 	for i := 0; i < len(m.Parameters); i++ {

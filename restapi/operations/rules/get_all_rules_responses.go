@@ -25,7 +25,7 @@ type GetAllRulesOK struct {
 	/*
 	  In: Body
 	*/
-	Payload []*models.EntityBrief `json:"body,omitempty"`
+	Payload []*models.Rule `json:"body,omitempty"`
 }
 
 // NewGetAllRulesOK creates GetAllRulesOK with default headers values
@@ -35,13 +35,13 @@ func NewGetAllRulesOK() *GetAllRulesOK {
 }
 
 // WithPayload adds the payload to the get all rules o k response
-func (o *GetAllRulesOK) WithPayload(payload []*models.EntityBrief) *GetAllRulesOK {
+func (o *GetAllRulesOK) WithPayload(payload []*models.Rule) *GetAllRulesOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get all rules o k response
-func (o *GetAllRulesOK) SetPayload(payload []*models.EntityBrief) {
+func (o *GetAllRulesOK) SetPayload(payload []*models.Rule) {
 	o.Payload = payload
 }
 
@@ -51,7 +51,7 @@ func (o *GetAllRulesOK) WriteResponse(rw http.ResponseWriter, producer runtime.P
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make([]*models.EntityBrief, 0, 50)
+		payload = make([]*models.Rule, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

@@ -41,12 +41,14 @@ type Action struct {
 	Namespace *string `json:"namespace"`
 
 	// parameter bindings included in the context passed to the action
-	// Required: true
 	Parameters []*KeyValue `json:"parameters"`
 
 	// Whether to publish the item or not
 	// Required: true
 	Publish *bool `json:"publish"`
+
+	// Time when the action was updated
+	Updated int64 `json:"updated,omitempty"`
 
 	// Semantic version of the item
 	// Required: true
@@ -185,8 +187,8 @@ func (m *Action) validateNamespace(formats strfmt.Registry) error {
 
 func (m *Action) validateParameters(formats strfmt.Registry) error {
 
-	if err := validate.Required("parameters", "body", m.Parameters); err != nil {
-		return err
+	if swag.IsZero(m.Parameters) { // not required
+		return nil
 	}
 
 	for i := 0; i < len(m.Parameters); i++ {

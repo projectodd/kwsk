@@ -6,6 +6,9 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"encoding/json"
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -13,7 +16,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// RulePut A restricted Rule view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).
+// RulePut A restricted Rule view used when updating a Rule
 // swagger:model RulePut
 type RulePut struct {
 
@@ -21,8 +24,19 @@ type RulePut struct {
 	// Min Length: 1
 	Action string `json:"action,omitempty"`
 
+	// annotations on the item
+	Annotations []*KeyValue `json:"annotations"`
+
+	// Name of the item
+	// Min Length: 1
+	Name string `json:"name,omitempty"`
+
 	// Whether to publish the item or not
 	Publish bool `json:"publish,omitempty"`
+
+	// Status of a rule
+	// Enum: [active inactive ]
+	Status string `json:"status,omitempty"`
 
 	// Name of the trigger
 	// Min Length: 1
@@ -38,6 +52,18 @@ func (m *RulePut) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateAction(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateAnnotations(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStatus(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -62,6 +88,90 @@ func (m *RulePut) validateAction(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinLength("action", "body", string(m.Action), 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *RulePut) validateAnnotations(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Annotations) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Annotations); i++ {
+		if swag.IsZero(m.Annotations[i]) { // not required
+			continue
+		}
+
+		if m.Annotations[i] != nil {
+			if err := m.Annotations[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("annotations" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *RulePut) validateName(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Name) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("name", "body", string(m.Name), 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var rulePutTypeStatusPropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["active","inactive",""]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		rulePutTypeStatusPropEnum = append(rulePutTypeStatusPropEnum, v)
+	}
+}
+
+const (
+
+	// RulePutStatusActive captures enum value "active"
+	RulePutStatusActive string = "active"
+
+	// RulePutStatusInactive captures enum value "inactive"
+	RulePutStatusInactive string = "inactive"
+
+	// RulePutStatus captures enum value ""
+	RulePutStatus string = ""
+)
+
+// prop value enum
+func (m *RulePut) validateStatusEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, rulePutTypeStatusPropEnum); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *RulePut) validateStatus(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Status) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateStatusEnum("status", "body", m.Status); err != nil {
 		return err
 	}
 

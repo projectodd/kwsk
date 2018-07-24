@@ -80,7 +80,7 @@ func init() {
           },
           {
             "type": "integer",
-            "description": "Number of entities to include in the result.",
+            "description": "Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.",
             "name": "limit",
             "in": "query"
           },
@@ -97,7 +97,7 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/EntityBrief"
+                "$ref": "#/definitions/Action"
               }
             }
           },
@@ -123,20 +123,6 @@ func init() {
         "operationId": "getActionByName",
         "parameters": [
           {
-            "type": "string",
-            "description": "The entity namespace",
-            "name": "namespace",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Name of action to fetch",
-            "name": "actionName",
-            "in": "path",
-            "required": true
-          },
-          {
             "type": "boolean",
             "description": "Include action code in the result",
             "name": "code",
@@ -151,6 +137,9 @@ func init() {
             }
           },
           "401": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "403": {
             "$ref": "#/responses/UnauthorizedRequest"
           },
           "404": {
@@ -176,20 +165,6 @@ func init() {
         "operationId": "updateAction",
         "parameters": [
           {
-            "type": "string",
-            "description": "The entity namespace",
-            "name": "namespace",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Name of action",
-            "name": "actionName",
-            "in": "path",
-            "required": true
-          },
-          {
             "enum": [
               "true",
               "false"
@@ -211,12 +186,18 @@ func init() {
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/UpdatedItem"
+            "description": "Updated Action",
+            "schema": {
+              "$ref": "#/definitions/Action"
+            }
           },
           "400": {
             "$ref": "#/responses/BadRequest"
           },
           "401": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "403": {
             "$ref": "#/responses/UnauthorizedRequest"
           },
           "409": {
@@ -241,20 +222,6 @@ func init() {
         "summary": "Invoke an action",
         "operationId": "invokeAction",
         "parameters": [
-          {
-            "type": "string",
-            "description": "The entity namespace",
-            "name": "namespace",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Name of action",
-            "name": "actionName",
-            "in": "path",
-            "required": true
-          },
           {
             "enum": [
               "true",
@@ -292,15 +259,15 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Successful activation",
-            "schema": {
-              "$ref": "#/definitions/Activation"
-            }
+            "description": "Successful activation"
           },
           "202": {
             "$ref": "#/responses/AcceptedActivation"
           },
           "401": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "403": {
             "$ref": "#/responses/UnauthorizedRequest"
           },
           "404": {
@@ -313,10 +280,7 @@ func init() {
             "$ref": "#/responses/ServerError"
           },
           "502": {
-            "description": "Activation produced an application error",
-            "schema": {
-              "$ref": "#/definitions/Activation"
-            }
+            "description": "Activation produced an application error"
           }
         }
       },
@@ -327,27 +291,77 @@ func init() {
         ],
         "summary": "Delete an action",
         "operationId": "deleteAction",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "The entity namespace",
-            "name": "namespace",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Name of action",
-            "name": "actionName",
-            "in": "path",
-            "required": true
-          }
-        ],
         "responses": {
           "200": {
             "$ref": "#/responses/DeletedItem"
           },
+          "400": {
+            "$ref": "#/responses/BadRequest"
+          },
           "401": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "403": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "404": {
+            "$ref": "#/responses/ItemNotFound"
+          },
+          "409": {
+            "$ref": "#/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "string",
+          "description": "The entity namespace",
+          "name": "namespace",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "Name of action to fetch",
+          "name": "actionName",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/namespaces/{namespace}/actions/{packageName}/{actionName}": {
+      "get": {
+        "description": "Get action information.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Get action information",
+        "operationId": "getActionInPackageByName",
+        "parameters": [
+          {
+            "type": "boolean",
+            "description": "Include action code in the result",
+            "name": "code",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returned action",
+            "schema": {
+              "$ref": "#/definitions/Action"
+            }
+          },
+          "401": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "403": {
             "$ref": "#/responses/UnauthorizedRequest"
           },
           "404": {
@@ -357,7 +371,195 @@ func init() {
             "$ref": "#/responses/ServerError"
           }
         }
-      }
+      },
+      "put": {
+        "description": "Create or update an action",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Create or update an action",
+        "operationId": "updateActionInPackage",
+        "parameters": [
+          {
+            "enum": [
+              "true",
+              "false"
+            ],
+            "type": "string",
+            "description": "Overwrite item if it exists. Default is false.",
+            "name": "overwrite",
+            "in": "query"
+          },
+          {
+            "description": "The action being updated",
+            "name": "action",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ActionPut"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated Action",
+            "schema": {
+              "$ref": "#/definitions/Action"
+            }
+          },
+          "400": {
+            "$ref": "#/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "403": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "409": {
+            "$ref": "#/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/responses/RequestEntityTooLarge"
+          },
+          "500": {
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "description": "Invoke an action",
+        "consumes": [
+          "application/json"
+        ],
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Invoke an action",
+        "operationId": "invokeActionInPackage",
+        "parameters": [
+          {
+            "enum": [
+              "true",
+              "false"
+            ],
+            "type": "string",
+            "description": "Blocking or non-blocking invocation. Default is non-blocking.",
+            "name": "blocking",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "true",
+              "false"
+            ],
+            "type": "string",
+            "description": "Return only the result of a blocking activation. Default is false.",
+            "name": "result",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "Wait no more than specified duration in milliseconds for a blocking response. Default value and max allowed timeout are 60000.",
+            "name": "timeout",
+            "in": "query"
+          },
+          {
+            "description": "The parameters for the action being invoked",
+            "name": "payload",
+            "in": "body",
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful activation"
+          },
+          "202": {
+            "$ref": "#/responses/AcceptedActivation"
+          },
+          "401": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "403": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "404": {
+            "$ref": "#/responses/ItemNotFound"
+          },
+          "408": {
+            "$ref": "#/responses/Timeout"
+          },
+          "500": {
+            "$ref": "#/responses/ServerError"
+          },
+          "502": {
+            "description": "Activation produced an application error"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete an action",
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Delete an action",
+        "operationId": "deleteActionInPackage",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/DeletedItem"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "403": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "404": {
+            "$ref": "#/responses/ItemNotFound"
+          },
+          "409": {
+            "$ref": "#/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/responses/ServerError"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "string",
+          "description": "The entity namespace",
+          "name": "namespace",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "Name of package that contains action",
+          "name": "packageName",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "Name of action to fetch",
+          "name": "actionName",
+          "in": "path",
+          "required": true
+        }
+      ]
     },
     "/namespaces/{namespace}/activations": {
       "get": {
@@ -386,7 +588,7 @@ func init() {
           },
           {
             "type": "integer",
-            "description": "Number of entities to include in the result.",
+            "description": "Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.",
             "name": "limit",
             "in": "query"
           },
@@ -597,7 +799,7 @@ func init() {
           },
           {
             "type": "integer",
-            "description": "Number of entities to include in the result.",
+            "description": "Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.",
             "name": "limit",
             "in": "query"
           },
@@ -614,7 +816,7 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/EntityBrief"
+                "$ref": "#/definitions/Package"
               }
             }
           },
@@ -666,6 +868,9 @@ func init() {
           },
           "404": {
             "$ref": "#/responses/ItemNotFound"
+          },
+          "409": {
+            "$ref": "#/responses/Conflict"
           },
           "500": {
             "$ref": "#/responses/ServerError"
@@ -722,12 +927,18 @@ func init() {
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/UpdatedItem"
+            "description": "Updated Package",
+            "schema": {
+              "$ref": "#/definitions/Package"
+            }
           },
           "400": {
             "$ref": "#/responses/BadRequest"
           },
           "401": {
+            "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "403": {
             "$ref": "#/responses/UnauthorizedRequest"
           },
           "409": {
@@ -774,6 +985,9 @@ func init() {
           "404": {
             "$ref": "#/responses/ItemNotFound"
           },
+          "409": {
+            "$ref": "#/responses/Conflict"
+          },
           "500": {
             "$ref": "#/responses/ServerError"
           }
@@ -801,7 +1015,7 @@ func init() {
           },
           {
             "type": "integer",
-            "description": "Number of entities to include in the result.",
+            "description": "Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.",
             "name": "limit",
             "in": "query"
           },
@@ -818,7 +1032,7 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/EntityBrief"
+                "$ref": "#/definitions/Rule"
               }
             }
           },
@@ -926,13 +1140,19 @@ func init() {
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/UpdatedItem"
+            "description": "Updated rule",
+            "schema": {
+              "$ref": "#/definitions/Rule"
+            }
           },
           "400": {
             "$ref": "#/responses/BadRequest"
           },
           "401": {
             "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "404": {
+            "$ref": "#/responses/ItemNotFound"
           },
           "409": {
             "$ref": "#/responses/Conflict"
@@ -971,20 +1191,30 @@ func init() {
             "required": true
           },
           {
-            "enum": [
-              "disabled",
-              "enabled"
-            ],
-            "type": "string",
-            "description": "Set state to enable or disable",
-            "name": "state",
-            "in": "query",
-            "required": true
+            "description": "Set status to active or inactive",
+            "name": "status",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "status"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "inactive",
+                    "active"
+                  ]
+                }
+              }
+            }
           }
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/UpdatedItem"
+            "$ref": "#/responses/AcceptedRuleStateChange"
           },
           "202": {
             "$ref": "#/responses/AcceptedRuleStateChange"
@@ -994,6 +1224,9 @@ func init() {
           },
           "401": {
             "$ref": "#/responses/UnauthorizedRequest"
+          },
+          "404": {
+            "$ref": "#/responses/ItemNotFound"
           },
           "500": {
             "$ref": "#/responses/ServerError"
@@ -1060,7 +1293,7 @@ func init() {
           },
           {
             "type": "integer",
-            "description": "Number of entities to include in the result.",
+            "description": "Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.",
             "name": "limit",
             "in": "query"
           },
@@ -1077,7 +1310,7 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/EntityBrief"
+                "$ref": "#/definitions/Trigger"
               }
             }
           },
@@ -1185,7 +1418,10 @@ func init() {
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/UpdatedItem"
+            "description": "Updated trigger",
+            "schema": {
+              "$ref": "#/definitions/Trigger"
+            }
           },
           "400": {
             "$ref": "#/responses/BadRequest"
@@ -1230,9 +1466,8 @@ func init() {
             "description": "The trigger payload",
             "name": "payload",
             "in": "body",
-            "required": true,
             "schema": {
-              "$ref": "#/definitions/KeyValue"
+              "type": "object"
             }
           }
         ],
@@ -1240,7 +1475,7 @@ func init() {
           "202": {
             "description": "Activation id",
             "schema": {
-              "$ref": "#/definitions/ItemId"
+              "$ref": "#/definitions/ActivationId"
             }
           },
           "204": {
@@ -1298,6 +1533,88 @@ func init() {
           }
         }
       }
+    },
+    "/web/{namespace}/{packageName}/{actionName}.{extension}": {
+      "get": {
+        "tags": [
+          "Actions"
+        ],
+        "responses": {
+          "default": {
+            "description": "any response",
+            "schema": {}
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Actions"
+        ],
+        "responses": {
+          "default": {
+            "description": "any response",
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Actions"
+        ],
+        "parameters": [
+          {
+            "description": "The parameters for the action being invoked",
+            "name": "payload",
+            "in": "body",
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "any response",
+            "schema": {}
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Actions"
+        ],
+        "responses": {
+          "default": {
+            "description": "any response",
+            "schema": {}
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "string",
+          "name": "namespace",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "name": "packageName",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "name": "actionName",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "name": "extension",
+          "in": "path",
+          "required": true
+        }
+      ]
     }
   },
   "definitions": {
@@ -1308,9 +1625,142 @@ func init() {
         "version",
         "publish",
         "exec",
-        "parameters",
         "limits"
       ],
+      "properties": {
+        "annotations": {
+          "description": "annotations on the item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
+        "exec": {
+          "$ref": "#/definitions/ActionExec"
+        },
+        "limits": {
+          "$ref": "#/definitions/ActionLimits"
+        },
+        "name": {
+          "description": "Name of the item",
+          "type": "string",
+          "minLength": 1
+        },
+        "namespace": {
+          "description": "Namespace of the item",
+          "type": "string",
+          "minLength": 1
+        },
+        "parameters": {
+          "description": "parameter bindings included in the context passed to the action",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
+        "publish": {
+          "description": "Whether to publish the item or not",
+          "type": "boolean"
+        },
+        "updated": {
+          "description": "Time when the action was updated",
+          "type": "integer"
+        },
+        "version": {
+          "description": "Semantic version of the item",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ActionExec": {
+      "description": "definition of the action, such as javascript code or the name of a container",
+      "properties": {
+        "binary": {
+          "description": "Whether the action has a binary attachment or not",
+          "type": "boolean"
+        },
+        "code": {
+          "description": "The code to execute when kind is not 'blackbox'",
+          "type": "string"
+        },
+        "components": {
+          "description": "For sequence actions, the individual action components",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "image": {
+          "description": "container image name when kind is 'blackbox'",
+          "type": "string"
+        },
+        "init": {
+          "description": "optional zipfile reference when code kind is 'nodejs'",
+          "type": "string"
+        },
+        "kind": {
+          "description": "the type of action",
+          "type": "string",
+          "enum": [
+            "nodejs:6",
+            "nodejs:8",
+            "nodejs:default",
+            "python:2",
+            "python:3",
+            "python:default",
+            "php:7.1",
+            "php:7.2",
+            "swift:3.1.1",
+            "swift:4.1",
+            "java",
+            "java:default",
+            "blackbox",
+            "sequence"
+          ]
+        },
+        "main": {
+          "description": "main entrypoint of the action code",
+          "type": "string"
+        }
+      }
+    },
+    "ActionLimits": {
+      "description": "Limits on a specific action",
+      "properties": {
+        "logs": {
+          "description": "log size in megabytes",
+          "type": "integer",
+          "format": "int32",
+          "default": 10
+        },
+        "memory": {
+          "description": "memory in megabytes",
+          "type": "integer",
+          "format": "int32",
+          "default": 256
+        },
+        "timeout": {
+          "description": "timeout in milliseconds",
+          "type": "integer",
+          "format": "int32",
+          "default": 60000
+        }
+      }
+    },
+    "ActionPayload": {
+      "required": [
+        "payload"
+      ],
+      "properties": {
+        "payload": {
+          "description": "The payload to pass to the action.",
+          "type": "string"
+        }
+      }
+    },
+    "ActionPut": {
+      "description": "A restricted Action view used when updating an Action",
       "properties": {
         "annotations": {
           "description": "annotations on the item",
@@ -1353,100 +1803,6 @@ func init() {
         }
       }
     },
-    "ActionExec": {
-      "description": "definition of the action, such as javascript code or the name of a container",
-      "required": [
-        "kind"
-      ],
-      "properties": {
-        "code": {
-          "description": "The code to execute when kind is not 'blackbox'",
-          "type": "string"
-        },
-        "image": {
-          "description": "container image name when kind is 'blackbox'",
-          "type": "string"
-        },
-        "init": {
-          "description": "optional zipfile reference when code kind is 'nodejs'",
-          "type": "string"
-        },
-        "kind": {
-          "description": "the type of action",
-          "type": "string",
-          "enum": [
-            "nodejs:6",
-            "nodejs:8",
-            "nodejs:default",
-            "python:2",
-            "python:3",
-            "swift:3.1.1",
-            "java",
-            "blackbox"
-          ]
-        }
-      }
-    },
-    "ActionLimits": {
-      "description": "Limits on a specific action",
-      "properties": {
-        "memory": {
-          "type": "integer",
-          "format": "int32",
-          "default": 256
-        },
-        "timeout": {
-          "type": "integer",
-          "format": "int32",
-          "default": 30000
-        }
-      }
-    },
-    "ActionPayload": {
-      "required": [
-        "payload"
-      ],
-      "properties": {
-        "payload": {
-          "description": "The payload to pass to the action.",
-          "type": "string"
-        }
-      }
-    },
-    "ActionPut": {
-      "description": "A restricted Action view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).",
-      "properties": {
-        "annotations": {
-          "description": "annotations on the item",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/KeyValue"
-          }
-        },
-        "exec": {
-          "$ref": "#/definitions/ActionExec"
-        },
-        "limits": {
-          "$ref": "#/definitions/ActionLimits"
-        },
-        "parameters": {
-          "description": "parameter bindings included in the context passed to the action",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/KeyValue"
-          }
-        },
-        "publish": {
-          "description": "Whether to publish the item or not",
-          "type": "boolean"
-        },
-        "version": {
-          "description": "Semantic version of the item",
-          "type": "string",
-          "minLength": 1
-        }
-      }
-    },
     "Activation": {
       "required": [
         "namespace",
@@ -1456,8 +1812,7 @@ func init() {
         "subject",
         "activationId",
         "start",
-        "end",
-        "result",
+        "response",
         "logs"
       ],
       "properties": {
@@ -1465,13 +1820,31 @@ func init() {
           "description": "Id of the activation",
           "type": "string"
         },
+        "annotations": {
+          "description": "annotations on the item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
+        "cause": {
+          "description": "the activation id that caused this activation",
+          "type": "string"
+        },
+        "duration": {
+          "description": "How long the invocation took, in millisecnods",
+          "type": "integer"
+        },
         "end": {
           "description": "Time when the activation completed",
-          "type": "string"
+          "type": "integer"
         },
         "logs": {
           "description": "Logs generated by the activation",
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "name": {
           "description": "Name of the item",
@@ -1485,12 +1858,12 @@ func init() {
           "description": "Whether to publish the item or not",
           "type": "boolean"
         },
-        "result": {
+        "response": {
           "$ref": "#/definitions/ActivationResult"
         },
         "start": {
           "description": "Time when the activation began",
-          "type": "string"
+          "type": "integer"
         },
         "subject": {
           "description": "The subject that activated the item",
@@ -1502,13 +1875,23 @@ func init() {
         }
       }
     },
+    "ActivationId": {
+      "required": [
+        "activationId"
+      ],
+      "properties": {
+        "activationId": {
+          "type": "string"
+        }
+      }
+    },
     "ActivationIds": {
       "properties": {
         "ids": {
           "description": "Array of activation ids",
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/ActivationId"
           }
         }
       }
@@ -1546,18 +1929,25 @@ func init() {
       "properties": {
         "logs": {
           "description": "Interleaved standard output and error of an activation",
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
     "ActivationResult": {
       "properties": {
+        "result": {
+          "description": "The return value from the activation"
+        },
         "status": {
           "description": "Exit status of the activation",
           "type": "string"
         },
-        "value": {
-          "description": "The return value from the activation"
+        "success": {
+          "description": "Whether the activation was successful or not",
+          "type": "boolean"
         }
       }
     },
@@ -1603,6 +1993,9 @@ func init() {
         "error"
       ],
       "properties": {
+        "code": {
+          "type": "string"
+        },
         "error": {
           "type": "string"
         }
@@ -1619,10 +2012,6 @@ func init() {
       }
     },
     "KeyValue": {
-      "required": [
-        "key",
-        "value"
-      ],
       "properties": {
         "key": {
           "type": "string"
@@ -1637,10 +2026,16 @@ func init() {
         "namespace",
         "name",
         "version",
-        "publish",
-        "parameters"
+        "publish"
       ],
       "properties": {
+        "actions": {
+          "description": "Actions contained in this package",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PackageAction"
+          }
+        },
         "annotations": {
           "description": "annotations on the item",
           "type": "array",
@@ -1650,6 +2045,13 @@ func init() {
         },
         "binding": {
           "$ref": "#/definitions/PackageBinding"
+        },
+        "feeds": {
+          "description": "Feeds contained in this package",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "name": {
           "description": "Name of the item",
@@ -1672,6 +2074,43 @@ func init() {
           "description": "Whether to publish the item or not",
           "type": "boolean"
         },
+        "updated": {
+          "description": "Time when the package was updated",
+          "type": "integer"
+        },
+        "version": {
+          "description": "Semantic version of the item",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "PackageAction": {
+      "description": "A restricted Action view used when listing actions in a package",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "annotations": {
+          "description": "annotations on the item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
+        "name": {
+          "description": "Name of the item",
+          "type": "string",
+          "minLength": 1
+        },
+        "parameters": {
+          "description": "parameter bindings included in the context passed to the action",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
         "version": {
           "description": "Semantic version of the item",
           "type": "string",
@@ -1680,10 +2119,6 @@ func init() {
       }
     },
     "PackageBinding": {
-      "required": [
-        "namespace",
-        "name"
-      ],
       "properties": {
         "name": {
           "description": "Name of the item",
@@ -1696,7 +2131,7 @@ func init() {
       }
     },
     "PackagePut": {
-      "description": "A restricted Package view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).",
+      "description": "A restricted Package view used when updating a Package",
       "properties": {
         "annotations": {
           "description": "annotations on the item",
@@ -1707,6 +2142,16 @@ func init() {
         },
         "binding": {
           "$ref": "#/definitions/PackageBinding"
+        },
+        "name": {
+          "description": "Name of the item",
+          "type": "string",
+          "minLength": 1
+        },
+        "namespace": {
+          "description": "Namespace of the item",
+          "type": "string",
+          "minLength": 1
         },
         "parameters": {
           "description": "parameter for the package",
@@ -1725,6 +2170,23 @@ func init() {
           "minLength": 1
         }
       }
+    },
+    "PathName": {
+      "required": [
+        "path",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "Principal": {
+      "type": "string"
     },
     "Provider": {
       "required": [
@@ -1791,15 +2253,19 @@ func init() {
         "name",
         "version",
         "publish",
-        "status",
         "trigger",
         "action"
       ],
       "properties": {
         "action": {
-          "description": "Name of the action",
-          "type": "string",
-          "minLength": 1
+          "$ref": "#/definitions/PathName"
+        },
+        "annotations": {
+          "description": "annotations on the item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
         },
         "name": {
           "description": "Name of the item",
@@ -1826,9 +2292,7 @@ func init() {
           ]
         },
         "trigger": {
-          "description": "Name of the trigger",
-          "type": "string",
-          "minLength": 1
+          "$ref": "#/definitions/PathName"
         },
         "version": {
           "description": "Semantic version of the item",
@@ -1838,16 +2302,37 @@ func init() {
       }
     },
     "RulePut": {
-      "description": "A restricted Rule view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).",
+      "description": "A restricted Rule view used when updating a Rule",
       "properties": {
         "action": {
           "description": "Name of the action",
           "type": "string",
           "minLength": 1
         },
+        "annotations": {
+          "description": "annotations on the item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
+        "name": {
+          "description": "Name of the item",
+          "type": "string",
+          "minLength": 1
+        },
         "publish": {
           "description": "Whether to publish the item or not",
           "type": "boolean"
+        },
+        "status": {
+          "description": "Status of a rule",
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            ""
+          ]
         },
         "trigger": {
           "description": "Name of the trigger",
@@ -1866,9 +2351,7 @@ func init() {
         "namespace",
         "name",
         "version",
-        "publish",
-        "parameters",
-        "limits"
+        "publish"
       ],
       "properties": {
         "annotations": {
@@ -1906,6 +2389,10 @@ func init() {
           "description": "rules associated with the trigger",
           "type": "object"
         },
+        "updated": {
+          "description": "Time when the trigger was updated",
+          "type": "integer"
+        },
         "version": {
           "description": "Semantic version of the item",
           "type": "string",
@@ -1929,7 +2416,7 @@ func init() {
       }
     },
     "TriggerPut": {
-      "description": "A restricted Trigger view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).",
+      "description": "A restricted Trigger view used when updating the Trigger",
       "properties": {
         "annotations": {
           "description": "annotations on the item",
@@ -1940,6 +2427,16 @@ func init() {
         },
         "limits": {
           "$ref": "#/definitions/TriggerLimits"
+        },
+        "name": {
+          "description": "Name of the item",
+          "type": "string",
+          "minLength": 1
+        },
+        "namespace": {
+          "description": "Namespace of the item",
+          "type": "string",
+          "minLength": 1
         },
         "parameters": {
           "description": "parameter bindings included in the context passed to the trigger",
@@ -1964,7 +2461,7 @@ func init() {
     "AcceptedActivation": {
       "description": "Accepted activation request",
       "schema": {
-        "$ref": "#/definitions/ItemId"
+        "$ref": "#/definitions/ActivationId"
       }
     },
     "AcceptedRuleStateChange": {
@@ -2028,6 +2525,16 @@ func init() {
       }
     }
   },
+  "securityDefinitions": {
+    "basicAuth": {
+      "type": "basic"
+    }
+  },
+  "security": [
+    {
+      "basicAuth": []
+    }
+  ],
   "tags": [
     {
       "name": "Actions"
@@ -2118,7 +2625,7 @@ func init() {
           },
           {
             "type": "integer",
-            "description": "Number of entities to include in the result.",
+            "description": "Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.",
             "name": "limit",
             "in": "query"
           },
@@ -2135,7 +2642,7 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/EntityBrief"
+                "$ref": "#/definitions/Action"
               }
             }
           },
@@ -2167,20 +2674,6 @@ func init() {
         "operationId": "getActionByName",
         "parameters": [
           {
-            "type": "string",
-            "description": "The entity namespace",
-            "name": "namespace",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Name of action to fetch",
-            "name": "actionName",
-            "in": "path",
-            "required": true
-          },
-          {
             "type": "boolean",
             "description": "Include action code in the result",
             "name": "code",
@@ -2195,6 +2688,12 @@ func init() {
             }
           },
           "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "403": {
             "description": "Unauthorized request",
             "schema": {
               "$ref": "#/definitions/ErrorMessage"
@@ -2229,20 +2728,6 @@ func init() {
         "operationId": "updateAction",
         "parameters": [
           {
-            "type": "string",
-            "description": "The entity namespace",
-            "name": "namespace",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Name of action",
-            "name": "actionName",
-            "in": "path",
-            "required": true
-          },
-          {
             "enum": [
               "true",
               "false"
@@ -2264,9 +2749,9 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Updated Item",
+            "description": "Updated Action",
             "schema": {
-              "$ref": "#/definitions/ItemId"
+              "$ref": "#/definitions/Action"
             }
           },
           "400": {
@@ -2276,6 +2761,12 @@ func init() {
             }
           },
           "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "403": {
             "description": "Unauthorized request",
             "schema": {
               "$ref": "#/definitions/ErrorMessage"
@@ -2313,19 +2804,290 @@ func init() {
         "operationId": "invokeAction",
         "parameters": [
           {
+            "enum": [
+              "true",
+              "false"
+            ],
             "type": "string",
-            "description": "The entity namespace",
-            "name": "namespace",
-            "in": "path",
-            "required": true
+            "description": "Blocking or non-blocking invocation. Default is non-blocking.",
+            "name": "blocking",
+            "in": "query"
           },
           {
+            "enum": [
+              "true",
+              "false"
+            ],
             "type": "string",
-            "description": "Name of action",
-            "name": "actionName",
-            "in": "path",
-            "required": true
+            "description": "Return only the result of a blocking activation. Default is false.",
+            "name": "result",
+            "in": "query"
           },
+          {
+            "type": "integer",
+            "description": "Wait no more than specified duration in milliseconds for a blocking response. Default value and max allowed timeout are 60000.",
+            "name": "timeout",
+            "in": "query"
+          },
+          {
+            "description": "The parameters for the action being invoked",
+            "name": "payload",
+            "in": "body",
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful activation"
+          },
+          "202": {
+            "description": "Accepted activation request",
+            "schema": {
+              "$ref": "#/definitions/ActivationId"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "403": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "408": {
+            "description": "Request timed out"
+          },
+          "500": {
+            "description": "Server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "502": {
+            "description": "Activation produced an application error"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete an action",
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Delete an action",
+        "operationId": "deleteAction",
+        "responses": {
+          "200": {
+            "description": "Deleted Item"
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "403": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "409": {
+            "description": "Conflicting item already exists",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "string",
+          "description": "The entity namespace",
+          "name": "namespace",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "Name of action to fetch",
+          "name": "actionName",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
+    "/namespaces/{namespace}/actions/{packageName}/{actionName}": {
+      "get": {
+        "description": "Get action information.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Get action information",
+        "operationId": "getActionInPackageByName",
+        "parameters": [
+          {
+            "type": "boolean",
+            "description": "Include action code in the result",
+            "name": "code",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returned action",
+            "schema": {
+              "$ref": "#/definitions/Action"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "403": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Create or update an action",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Create or update an action",
+        "operationId": "updateActionInPackage",
+        "parameters": [
+          {
+            "enum": [
+              "true",
+              "false"
+            ],
+            "type": "string",
+            "description": "Overwrite item if it exists. Default is false.",
+            "name": "overwrite",
+            "in": "query"
+          },
+          {
+            "description": "The action being updated",
+            "name": "action",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ActionPut"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated Action",
+            "schema": {
+              "$ref": "#/definitions/Action"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "403": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "409": {
+            "description": "Conflicting item already exists",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "413": {
+            "description": "Request entity too large",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Invoke an action",
+        "consumes": [
+          "application/json"
+        ],
+        "tags": [
+          "Actions"
+        ],
+        "summary": "Invoke an action",
+        "operationId": "invokeActionInPackage",
+        "parameters": [
           {
             "enum": [
               "true",
@@ -2363,18 +3125,21 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Successful activation",
-            "schema": {
-              "$ref": "#/definitions/Activation"
-            }
+            "description": "Successful activation"
           },
           "202": {
             "description": "Accepted activation request",
             "schema": {
-              "$ref": "#/definitions/ItemId"
+              "$ref": "#/definitions/ActivationId"
             }
           },
           "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "403": {
             "description": "Unauthorized request",
             "schema": {
               "$ref": "#/definitions/ErrorMessage"
@@ -2396,10 +3161,7 @@ func init() {
             }
           },
           "502": {
-            "description": "Activation produced an application error",
-            "schema": {
-              "$ref": "#/definitions/Activation"
-            }
+            "description": "Activation produced an application error"
           }
         }
       },
@@ -2409,28 +3171,24 @@ func init() {
           "Actions"
         ],
         "summary": "Delete an action",
-        "operationId": "deleteAction",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "The entity namespace",
-            "name": "namespace",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Name of action",
-            "name": "actionName",
-            "in": "path",
-            "required": true
-          }
-        ],
+        "operationId": "deleteActionInPackage",
         "responses": {
           "200": {
             "description": "Deleted Item"
           },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
           "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "403": {
             "description": "Unauthorized request",
             "schema": {
               "$ref": "#/definitions/ErrorMessage"
@@ -2442,6 +3200,12 @@ func init() {
               "$ref": "#/definitions/ErrorMessage"
             }
           },
+          "409": {
+            "description": "Conflicting item already exists",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
           "500": {
             "description": "Server error",
             "schema": {
@@ -2449,7 +3213,30 @@ func init() {
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "type": "string",
+          "description": "The entity namespace",
+          "name": "namespace",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "Name of package that contains action",
+          "name": "packageName",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "description": "Name of action to fetch",
+          "name": "actionName",
+          "in": "path",
+          "required": true
+        }
+      ]
     },
     "/namespaces/{namespace}/activations": {
       "get": {
@@ -2478,7 +3265,7 @@ func init() {
           },
           {
             "type": "integer",
-            "description": "Number of entities to include in the result.",
+            "description": "Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.",
             "name": "limit",
             "in": "query"
           },
@@ -2722,7 +3509,7 @@ func init() {
           },
           {
             "type": "integer",
-            "description": "Number of entities to include in the result.",
+            "description": "Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.",
             "name": "limit",
             "in": "query"
           },
@@ -2739,7 +3526,7 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/EntityBrief"
+                "$ref": "#/definitions/Package"
               }
             }
           },
@@ -2804,6 +3591,12 @@ func init() {
               "$ref": "#/definitions/ErrorMessage"
             }
           },
+          "409": {
+            "description": "Conflicting item already exists",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
           "500": {
             "description": "Server error",
             "schema": {
@@ -2862,9 +3655,9 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Updated Item",
+            "description": "Updated Package",
             "schema": {
-              "$ref": "#/definitions/ItemId"
+              "$ref": "#/definitions/Package"
             }
           },
           "400": {
@@ -2874,6 +3667,12 @@ func init() {
             }
           },
           "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "403": {
             "description": "Unauthorized request",
             "schema": {
               "$ref": "#/definitions/ErrorMessage"
@@ -2938,6 +3737,12 @@ func init() {
               "$ref": "#/definitions/ErrorMessage"
             }
           },
+          "409": {
+            "description": "Conflicting item already exists",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
           "500": {
             "description": "Server error",
             "schema": {
@@ -2968,7 +3773,7 @@ func init() {
           },
           {
             "type": "integer",
-            "description": "Number of entities to include in the result.",
+            "description": "Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.",
             "name": "limit",
             "in": "query"
           },
@@ -2985,7 +3790,7 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/EntityBrief"
+                "$ref": "#/definitions/Rule"
               }
             }
           },
@@ -3108,9 +3913,9 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Updated Item",
+            "description": "Updated rule",
             "schema": {
-              "$ref": "#/definitions/ItemId"
+              "$ref": "#/definitions/Rule"
             }
           },
           "400": {
@@ -3121,6 +3926,12 @@ func init() {
           },
           "401": {
             "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "404": {
+            "description": "Item not found",
             "schema": {
               "$ref": "#/definitions/ErrorMessage"
             }
@@ -3171,23 +3982,18 @@ func init() {
             "required": true
           },
           {
-            "enum": [
-              "disabled",
-              "enabled"
-            ],
-            "type": "string",
-            "description": "Set state to enable or disable",
-            "name": "state",
-            "in": "query",
-            "required": true
+            "description": "Set status to active or inactive",
+            "name": "status",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/setStateParamsBody"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Updated Item",
-            "schema": {
-              "$ref": "#/definitions/ItemId"
-            }
+            "description": "Rule has been enabled or disabled"
           },
           "202": {
             "description": "Rule has been enabled or disabled"
@@ -3200,6 +4006,12 @@ func init() {
           },
           "401": {
             "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/ErrorMessage"
+            }
+          },
+          "404": {
+            "description": "Item not found",
             "schema": {
               "$ref": "#/definitions/ErrorMessage"
             }
@@ -3281,7 +4093,7 @@ func init() {
           },
           {
             "type": "integer",
-            "description": "Number of entities to include in the result.",
+            "description": "Number of entities to include in the result (0-200). The default limit is 30. A value of 0 sets the limit to the maximum.",
             "name": "limit",
             "in": "query"
           },
@@ -3298,7 +4110,7 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/EntityBrief"
+                "$ref": "#/definitions/Trigger"
               }
             }
           },
@@ -3421,9 +4233,9 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Updated Item",
+            "description": "Updated trigger",
             "schema": {
-              "$ref": "#/definitions/ItemId"
+              "$ref": "#/definitions/Trigger"
             }
           },
           "400": {
@@ -3484,9 +4296,8 @@ func init() {
             "description": "The trigger payload",
             "name": "payload",
             "in": "body",
-            "required": true,
             "schema": {
-              "$ref": "#/definitions/KeyValue"
+              "type": "object"
             }
           }
         ],
@@ -3494,7 +4305,7 @@ func init() {
           "202": {
             "description": "Activation id",
             "schema": {
-              "$ref": "#/definitions/ItemId"
+              "$ref": "#/definitions/ActivationId"
             }
           },
           "204": {
@@ -3570,6 +4381,88 @@ func init() {
           }
         }
       }
+    },
+    "/web/{namespace}/{packageName}/{actionName}.{extension}": {
+      "get": {
+        "tags": [
+          "Actions"
+        ],
+        "responses": {
+          "default": {
+            "description": "any response",
+            "schema": {}
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Actions"
+        ],
+        "responses": {
+          "default": {
+            "description": "any response",
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Actions"
+        ],
+        "parameters": [
+          {
+            "description": "The parameters for the action being invoked",
+            "name": "payload",
+            "in": "body",
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "any response",
+            "schema": {}
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Actions"
+        ],
+        "responses": {
+          "default": {
+            "description": "any response",
+            "schema": {}
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "string",
+          "name": "namespace",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "name": "packageName",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "name": "actionName",
+          "in": "path",
+          "required": true
+        },
+        {
+          "type": "string",
+          "name": "extension",
+          "in": "path",
+          "required": true
+        }
+      ]
     }
   },
   "definitions": {
@@ -3580,9 +4473,142 @@ func init() {
         "version",
         "publish",
         "exec",
-        "parameters",
         "limits"
       ],
+      "properties": {
+        "annotations": {
+          "description": "annotations on the item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
+        "exec": {
+          "$ref": "#/definitions/ActionExec"
+        },
+        "limits": {
+          "$ref": "#/definitions/ActionLimits"
+        },
+        "name": {
+          "description": "Name of the item",
+          "type": "string",
+          "minLength": 1
+        },
+        "namespace": {
+          "description": "Namespace of the item",
+          "type": "string",
+          "minLength": 1
+        },
+        "parameters": {
+          "description": "parameter bindings included in the context passed to the action",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
+        "publish": {
+          "description": "Whether to publish the item or not",
+          "type": "boolean"
+        },
+        "updated": {
+          "description": "Time when the action was updated",
+          "type": "integer"
+        },
+        "version": {
+          "description": "Semantic version of the item",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ActionExec": {
+      "description": "definition of the action, such as javascript code or the name of a container",
+      "properties": {
+        "binary": {
+          "description": "Whether the action has a binary attachment or not",
+          "type": "boolean"
+        },
+        "code": {
+          "description": "The code to execute when kind is not 'blackbox'",
+          "type": "string"
+        },
+        "components": {
+          "description": "For sequence actions, the individual action components",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "image": {
+          "description": "container image name when kind is 'blackbox'",
+          "type": "string"
+        },
+        "init": {
+          "description": "optional zipfile reference when code kind is 'nodejs'",
+          "type": "string"
+        },
+        "kind": {
+          "description": "the type of action",
+          "type": "string",
+          "enum": [
+            "nodejs:6",
+            "nodejs:8",
+            "nodejs:default",
+            "python:2",
+            "python:3",
+            "python:default",
+            "php:7.1",
+            "php:7.2",
+            "swift:3.1.1",
+            "swift:4.1",
+            "java",
+            "java:default",
+            "blackbox",
+            "sequence"
+          ]
+        },
+        "main": {
+          "description": "main entrypoint of the action code",
+          "type": "string"
+        }
+      }
+    },
+    "ActionLimits": {
+      "description": "Limits on a specific action",
+      "properties": {
+        "logs": {
+          "description": "log size in megabytes",
+          "type": "integer",
+          "format": "int32",
+          "default": 10
+        },
+        "memory": {
+          "description": "memory in megabytes",
+          "type": "integer",
+          "format": "int32",
+          "default": 256
+        },
+        "timeout": {
+          "description": "timeout in milliseconds",
+          "type": "integer",
+          "format": "int32",
+          "default": 60000
+        }
+      }
+    },
+    "ActionPayload": {
+      "required": [
+        "payload"
+      ],
+      "properties": {
+        "payload": {
+          "description": "The payload to pass to the action.",
+          "type": "string"
+        }
+      }
+    },
+    "ActionPut": {
+      "description": "A restricted Action view used when updating an Action",
       "properties": {
         "annotations": {
           "description": "annotations on the item",
@@ -3625,100 +4651,6 @@ func init() {
         }
       }
     },
-    "ActionExec": {
-      "description": "definition of the action, such as javascript code or the name of a container",
-      "required": [
-        "kind"
-      ],
-      "properties": {
-        "code": {
-          "description": "The code to execute when kind is not 'blackbox'",
-          "type": "string"
-        },
-        "image": {
-          "description": "container image name when kind is 'blackbox'",
-          "type": "string"
-        },
-        "init": {
-          "description": "optional zipfile reference when code kind is 'nodejs'",
-          "type": "string"
-        },
-        "kind": {
-          "description": "the type of action",
-          "type": "string",
-          "enum": [
-            "nodejs:6",
-            "nodejs:8",
-            "nodejs:default",
-            "python:2",
-            "python:3",
-            "swift:3.1.1",
-            "java",
-            "blackbox"
-          ]
-        }
-      }
-    },
-    "ActionLimits": {
-      "description": "Limits on a specific action",
-      "properties": {
-        "memory": {
-          "type": "integer",
-          "format": "int32",
-          "default": 256
-        },
-        "timeout": {
-          "type": "integer",
-          "format": "int32",
-          "default": 30000
-        }
-      }
-    },
-    "ActionPayload": {
-      "required": [
-        "payload"
-      ],
-      "properties": {
-        "payload": {
-          "description": "The payload to pass to the action.",
-          "type": "string"
-        }
-      }
-    },
-    "ActionPut": {
-      "description": "A restricted Action view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).",
-      "properties": {
-        "annotations": {
-          "description": "annotations on the item",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/KeyValue"
-          }
-        },
-        "exec": {
-          "$ref": "#/definitions/ActionExec"
-        },
-        "limits": {
-          "$ref": "#/definitions/ActionLimits"
-        },
-        "parameters": {
-          "description": "parameter bindings included in the context passed to the action",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/KeyValue"
-          }
-        },
-        "publish": {
-          "description": "Whether to publish the item or not",
-          "type": "boolean"
-        },
-        "version": {
-          "description": "Semantic version of the item",
-          "type": "string",
-          "minLength": 1
-        }
-      }
-    },
     "Activation": {
       "required": [
         "namespace",
@@ -3728,8 +4660,7 @@ func init() {
         "subject",
         "activationId",
         "start",
-        "end",
-        "result",
+        "response",
         "logs"
       ],
       "properties": {
@@ -3737,13 +4668,31 @@ func init() {
           "description": "Id of the activation",
           "type": "string"
         },
+        "annotations": {
+          "description": "annotations on the item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
+        "cause": {
+          "description": "the activation id that caused this activation",
+          "type": "string"
+        },
+        "duration": {
+          "description": "How long the invocation took, in millisecnods",
+          "type": "integer"
+        },
         "end": {
           "description": "Time when the activation completed",
-          "type": "string"
+          "type": "integer"
         },
         "logs": {
           "description": "Logs generated by the activation",
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "name": {
           "description": "Name of the item",
@@ -3757,12 +4706,12 @@ func init() {
           "description": "Whether to publish the item or not",
           "type": "boolean"
         },
-        "result": {
+        "response": {
           "$ref": "#/definitions/ActivationResult"
         },
         "start": {
           "description": "Time when the activation began",
-          "type": "string"
+          "type": "integer"
         },
         "subject": {
           "description": "The subject that activated the item",
@@ -3774,13 +4723,23 @@ func init() {
         }
       }
     },
+    "ActivationId": {
+      "required": [
+        "activationId"
+      ],
+      "properties": {
+        "activationId": {
+          "type": "string"
+        }
+      }
+    },
     "ActivationIds": {
       "properties": {
         "ids": {
           "description": "Array of activation ids",
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/ActivationId"
           }
         }
       }
@@ -3809,18 +4768,25 @@ func init() {
       "properties": {
         "logs": {
           "description": "Interleaved standard output and error of an activation",
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
     "ActivationResult": {
       "properties": {
+        "result": {
+          "description": "The return value from the activation"
+        },
         "status": {
           "description": "Exit status of the activation",
           "type": "string"
         },
-        "value": {
-          "description": "The return value from the activation"
+        "success": {
+          "description": "Whether the activation was successful or not",
+          "type": "boolean"
         }
       }
     },
@@ -3866,6 +4832,9 @@ func init() {
         "error"
       ],
       "properties": {
+        "code": {
+          "type": "string"
+        },
         "error": {
           "type": "string"
         }
@@ -3882,10 +4851,6 @@ func init() {
       }
     },
     "KeyValue": {
-      "required": [
-        "key",
-        "value"
-      ],
       "properties": {
         "key": {
           "type": "string"
@@ -3900,10 +4865,16 @@ func init() {
         "namespace",
         "name",
         "version",
-        "publish",
-        "parameters"
+        "publish"
       ],
       "properties": {
+        "actions": {
+          "description": "Actions contained in this package",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PackageAction"
+          }
+        },
         "annotations": {
           "description": "annotations on the item",
           "type": "array",
@@ -3913,6 +4884,13 @@ func init() {
         },
         "binding": {
           "$ref": "#/definitions/PackageBinding"
+        },
+        "feeds": {
+          "description": "Feeds contained in this package",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "name": {
           "description": "Name of the item",
@@ -3935,6 +4913,43 @@ func init() {
           "description": "Whether to publish the item or not",
           "type": "boolean"
         },
+        "updated": {
+          "description": "Time when the package was updated",
+          "type": "integer"
+        },
+        "version": {
+          "description": "Semantic version of the item",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "PackageAction": {
+      "description": "A restricted Action view used when listing actions in a package",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "annotations": {
+          "description": "annotations on the item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
+        "name": {
+          "description": "Name of the item",
+          "type": "string",
+          "minLength": 1
+        },
+        "parameters": {
+          "description": "parameter bindings included in the context passed to the action",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
         "version": {
           "description": "Semantic version of the item",
           "type": "string",
@@ -3943,10 +4958,6 @@ func init() {
       }
     },
     "PackageBinding": {
-      "required": [
-        "namespace",
-        "name"
-      ],
       "properties": {
         "name": {
           "description": "Name of the item",
@@ -3959,7 +4970,7 @@ func init() {
       }
     },
     "PackagePut": {
-      "description": "A restricted Package view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).",
+      "description": "A restricted Package view used when updating a Package",
       "properties": {
         "annotations": {
           "description": "annotations on the item",
@@ -3970,6 +4981,16 @@ func init() {
         },
         "binding": {
           "$ref": "#/definitions/PackageBinding"
+        },
+        "name": {
+          "description": "Name of the item",
+          "type": "string",
+          "minLength": 1
+        },
+        "namespace": {
+          "description": "Namespace of the item",
+          "type": "string",
+          "minLength": 1
         },
         "parameters": {
           "description": "parameter for the package",
@@ -3988,6 +5009,23 @@ func init() {
           "minLength": 1
         }
       }
+    },
+    "PathName": {
+      "required": [
+        "path",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "Principal": {
+      "type": "string"
     },
     "Provider": {
       "required": [
@@ -4054,15 +5092,19 @@ func init() {
         "name",
         "version",
         "publish",
-        "status",
         "trigger",
         "action"
       ],
       "properties": {
         "action": {
-          "description": "Name of the action",
-          "type": "string",
-          "minLength": 1
+          "$ref": "#/definitions/PathName"
+        },
+        "annotations": {
+          "description": "annotations on the item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
         },
         "name": {
           "description": "Name of the item",
@@ -4089,9 +5131,7 @@ func init() {
           ]
         },
         "trigger": {
-          "description": "Name of the trigger",
-          "type": "string",
-          "minLength": 1
+          "$ref": "#/definitions/PathName"
         },
         "version": {
           "description": "Semantic version of the item",
@@ -4101,16 +5141,37 @@ func init() {
       }
     },
     "RulePut": {
-      "description": "A restricted Rule view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).",
+      "description": "A restricted Rule view used when updating a Rule",
       "properties": {
         "action": {
           "description": "Name of the action",
           "type": "string",
           "minLength": 1
         },
+        "annotations": {
+          "description": "annotations on the item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyValue"
+          }
+        },
+        "name": {
+          "description": "Name of the item",
+          "type": "string",
+          "minLength": 1
+        },
         "publish": {
           "description": "Whether to publish the item or not",
           "type": "boolean"
+        },
+        "status": {
+          "description": "Status of a rule",
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive",
+            ""
+          ]
         },
         "trigger": {
           "description": "Name of the trigger",
@@ -4129,9 +5190,7 @@ func init() {
         "namespace",
         "name",
         "version",
-        "publish",
-        "parameters",
-        "limits"
+        "publish"
       ],
       "properties": {
         "annotations": {
@@ -4169,6 +5228,10 @@ func init() {
           "description": "rules associated with the trigger",
           "type": "object"
         },
+        "updated": {
+          "description": "Time when the trigger was updated",
+          "type": "integer"
+        },
         "version": {
           "description": "Semantic version of the item",
           "type": "string",
@@ -4192,7 +5255,7 @@ func init() {
       }
     },
     "TriggerPut": {
-      "description": "A restricted Trigger view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).",
+      "description": "A restricted Trigger view used when updating the Trigger",
       "properties": {
         "annotations": {
           "description": "annotations on the item",
@@ -4203,6 +5266,16 @@ func init() {
         },
         "limits": {
           "$ref": "#/definitions/TriggerLimits"
+        },
+        "name": {
+          "description": "Name of the item",
+          "type": "string",
+          "minLength": 1
+        },
+        "namespace": {
+          "description": "Namespace of the item",
+          "type": "string",
+          "minLength": 1
         },
         "parameters": {
           "description": "parameter bindings included in the context passed to the trigger",
@@ -4234,13 +5307,29 @@ func init() {
         }
       },
       "x-go-gen-location": "models"
+    },
+    "setStateParamsBody": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "inactive",
+            "active"
+          ]
+        }
+      },
+      "x-go-gen-location": "operations"
     }
   },
   "responses": {
     "AcceptedActivation": {
       "description": "Accepted activation request",
       "schema": {
-        "$ref": "#/definitions/ItemId"
+        "$ref": "#/definitions/ActivationId"
       }
     },
     "AcceptedRuleStateChange": {
@@ -4304,6 +5393,16 @@ func init() {
       }
     }
   },
+  "securityDefinitions": {
+    "basicAuth": {
+      "type": "basic"
+    }
+  },
+  "security": [
+    {
+      "basicAuth": []
+    }
+  ],
   "tags": [
     {
       "name": "Actions"

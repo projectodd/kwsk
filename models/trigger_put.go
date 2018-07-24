@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// TriggerPut A restricted Trigger view that elides properties that are auto-assigned or derived from the URI (i.e., the namespace and name).
+// TriggerPut A restricted Trigger view used when updating the Trigger
 // swagger:model TriggerPut
 type TriggerPut struct {
 
@@ -24,6 +24,14 @@ type TriggerPut struct {
 
 	// limits
 	Limits TriggerLimits `json:"limits,omitempty"`
+
+	// Name of the item
+	// Min Length: 1
+	Name string `json:"name,omitempty"`
+
+	// Namespace of the item
+	// Min Length: 1
+	Namespace string `json:"namespace,omitempty"`
 
 	// parameter bindings included in the context passed to the trigger
 	Parameters []*KeyValue `json:"parameters"`
@@ -41,6 +49,14 @@ func (m *TriggerPut) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateAnnotations(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateNamespace(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -78,6 +94,32 @@ func (m *TriggerPut) validateAnnotations(formats strfmt.Registry) error {
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (m *TriggerPut) validateName(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Name) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("name", "body", string(m.Name), 1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *TriggerPut) validateNamespace(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Namespace) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("namespace", "body", string(m.Namespace), 1); err != nil {
+		return err
 	}
 
 	return nil

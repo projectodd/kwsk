@@ -9,19 +9,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	models "github.com/projectodd/kwsk/models"
 )
 
 // GetRuleByNameHandlerFunc turns a function with the right signature into a get rule by name handler
-type GetRuleByNameHandlerFunc func(GetRuleByNameParams) middleware.Responder
+type GetRuleByNameHandlerFunc func(GetRuleByNameParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetRuleByNameHandlerFunc) Handle(params GetRuleByNameParams) middleware.Responder {
-	return fn(params)
+func (fn GetRuleByNameHandlerFunc) Handle(params GetRuleByNameParams, principal *models.Principal) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetRuleByNameHandler interface for that can handle valid get rule by name params
 type GetRuleByNameHandler interface {
-	Handle(GetRuleByNameParams) middleware.Responder
+	Handle(GetRuleByNameParams, *models.Principal) middleware.Responder
 }
 
 // NewGetRuleByName creates a new http.Handler for the get rule by name operation
@@ -48,12 +50,25 @@ func (o *GetRuleByName) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	var Params = NewGetRuleByNameParams()
 
+	uprinc, aCtx, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	if aCtx != nil {
+		r = aCtx
+	}
+	var principal *models.Principal
+	if uprinc != nil {
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
+	}
+
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

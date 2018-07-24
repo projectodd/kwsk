@@ -33,7 +33,7 @@ type InvokeActionParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*Name of action
+	/*Name of action to fetch
 	  Required: true
 	  In: path
 	*/
