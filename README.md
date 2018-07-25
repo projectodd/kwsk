@@ -1,4 +1,4 @@
-# Kwsk (Prototype of Apache OpenWhisk on top of Knative)
+# Kwsk (Apache OpenWhisk on Knative)
 
 This is a prototype of replacing almost the entirety of the Apache
 OpenWhisk server components with
