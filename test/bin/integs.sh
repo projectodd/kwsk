@@ -18,7 +18,7 @@ nohup go run $TESTDIR/../cmd/kwsk-server/main.go --port 8080 --istio $ISTIO >kws
 KWSK_PID=$!
 
 pushd $OWSK_HOME
-./gradlew :tests:test --tests ${TESTS:-"system.basic.WskRest*"}
+TERM=dumb ./gradlew :tests:test --tests ${TESTS:-"system.basic.WskRest*"}
 STATUS=$?
 popd
 
