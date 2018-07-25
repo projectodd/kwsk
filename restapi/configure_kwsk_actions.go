@@ -76,7 +76,9 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		annotations := make(map[string]string)
 		annotations["kwsk_action_name"] = name
 		annotations["kwsk_action_version"] = params.Action.Version
-		annotations["kwsk_action_kind"] = *params.Action.Exec.Kind
+		if params.Action.Exec.Kind != nil {
+			annotations["kwsk_action_kind"] = *params.Action.Exec.Kind
+		}
 		annotations["kwsk_action_code"] = params.Action.Exec.Code
 
 		config := &v1alpha1.Configuration{
