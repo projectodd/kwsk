@@ -1,10 +1,19 @@
-# Kwsk (Knative OpenWhisk)
+# Kwsk (Prototype of Apache OpenWhisk on top of Knative)
+
+This is a prototype of replacing almost the entirety of the Apache
+OpenWhisk server components with
+[Knative](https://github.com/knative). The goal would be to keep
+existing OpenWhisk clients, developer tooling, and integrations
+working unchanged against a new OpenWhisk that builds on top of
+Knative and Kubernetes exclusively.
 
 ## Prerequisites
 
 You'll need a recent [`go`](https://golang.org/doc/install) and
 [`dep`](https://github.com/golang/dep). You'll also want this repository
 checked somewhere under `$GOPATH/src`.
+
+You'll also need a working [Knative installation](https://github.com/knative/docs/).
 
 ## Running the server
 
