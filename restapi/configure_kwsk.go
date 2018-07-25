@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/swag"
 	graceful "github.com/tylerb/graceful"
 
+	"github.com/projectodd/kwsk/models"
 	"github.com/projectodd/kwsk/restapi/operations"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -57,6 +58,12 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 	knativeClient, err := knativeClient()
 	if err != nil {
 		log.Fatalf("Error creating Knative client: %s\n", err.Error())
+	}
+
+	// Applies when the Authorization header is set with the Basic scheme
+	api.BasicAuthAuth = func(user string, pass string) (*models.Principal, error) {
+		principal := models.Principal("someuser")
+		return &principal, nil
 	}
 
 	configureActions(api, knativeClient)
