@@ -73,3 +73,7 @@ func (o *InvokeAction) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }
+
+// InvokeActionOKBody invoke action o k body
+// swagger:model InvokeActionOKBody
+type InvokeActionOKBody interface{}

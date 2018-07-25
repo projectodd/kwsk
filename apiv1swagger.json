@@ -325,7 +325,8 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful activation"
+                        "description": "Successful activation",
+                        "schema": {}
                     },
                     "202": {
                         "$ref": "#/responses/AcceptedActivation"

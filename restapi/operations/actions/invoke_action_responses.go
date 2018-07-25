@@ -21,6 +21,11 @@ const InvokeActionOKCode int = 200
 swagger:response invokeActionOK
 */
 type InvokeActionOK struct {
+
+	/*
+	  In: Body
+	*/
+	Payload InvokeActionOKBody `json:"body,omitempty"`
 }
 
 // NewInvokeActionOK creates InvokeActionOK with default headers values
@@ -29,12 +34,26 @@ func NewInvokeActionOK() *InvokeActionOK {
 	return &InvokeActionOK{}
 }
 
+// WithPayload adds the payload to the invoke action o k response
+func (o *InvokeActionOK) WithPayload(payload InvokeActionOKBody) *InvokeActionOK {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the invoke action o k response
+func (o *InvokeActionOK) SetPayload(payload InvokeActionOKBody) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *InvokeActionOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
 	rw.WriteHeader(200)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+
 }
 
 // InvokeActionAcceptedCode is the HTTP code returned for type InvokeActionAccepted

@@ -259,7 +259,8 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Successful activation"
+            "description": "Successful activation",
+            "schema": {}
           },
           "202": {
             "$ref": "#/responses/AcceptedActivation"
@@ -2840,7 +2841,8 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Successful activation"
+            "description": "Successful activation",
+            "schema": {}
           },
           "202": {
             "description": "Accepted activation request",

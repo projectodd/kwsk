@@ -18,7 +18,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	build "github.com/knative/build/pkg/apis/build/v1alpha1"
 	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	knative "github.com/knative/serving/pkg/client/clientset/versioned"
 )
@@ -72,12 +71,17 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		name := params.ActionName
 		configName := sanitizeActionName(name)
 		namespace := namespaceOrDefault(params.Namespace)
+		var image string
 
 		annotations := make(map[string]string)
 		annotations["kwsk_action_name"] = name
 		annotations["kwsk_action_version"] = params.Action.Version
-		annotations["kwsk_action_kind"] = params.Action.Exec.Kind
-		annotations["kwsk_action_code"] = params.Action.Exec.Code
+
+		if params.Action.Exec != nil {
+			image = params.Action.Exec.Image
+			annotations["kwsk_action_kind"] = params.Action.Exec.Kind
+			annotations["kwsk_action_code"] = params.Action.Exec.Code
+		}
 
 		config := &v1alpha1.Configuration{
 			ObjectMeta: metav1.ObjectMeta{
@@ -93,23 +97,10 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 			},
 		}
 
-		image := params.Action.Exec.Image
 		if image == "" {
 			// TODO: Map the kind of the action to an image instead of
 			// just assuming everything is node8
 			image = "openwhisk/action-nodejs-v8"
-			// TODO: This is just a dummy, placeholder BuildSpec. We
-			// don't actually use it for anything.
-			buildSpec := &build.BuildSpec{
-				Steps: []corev1.Container{
-					corev1.Container{
-						Image:   image,
-						Command: []string{"/bin/bash"},
-						Args:    []string{"-c", "echo 'hi'"},
-					},
-				},
-			}
-			config.Spec.Build = buildSpec
 		}
 		container := corev1.Container{
 			Image: image,
@@ -297,7 +288,10 @@ func initAction(istioHostAndPort string, actionHost string, actionCode string) m
 		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessageFromErr(err))
 	}
 
-	if resStatus != http.StatusOK {
+	if resStatus == http.StatusForbidden {
+		// ignore, since this is expected when we try to initialze an
+		// action multiple times
+	} else if resStatus != http.StatusOK {
 		msg := fmt.Sprintf("Error initializating action. Status: %d, Message: %s\n", resStatus, resBody)
 		errorMessage := &models.ErrorMessage{
 			Error: &msg,
@@ -336,7 +330,8 @@ func runAction(istioHostAndPort string, actionHost string, name string, namespac
 		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
 	}
 	activationResult := &models.ActivationResult{
-		Result: resultJson,
+		Result:  resultJson,
+		Success: true,
 	}
 
 	activationId := "dummyactivationid"
@@ -348,13 +343,13 @@ func runAction(istioHostAndPort string, actionHost string, name string, namespac
 		Response:     activationResult,
 		Logs:         logs,
 	}
-	fmt.Sprintf("Activation: %+v\n", activation)
-	return actions.NewInvokeActionOK()
+	fmt.Printf("Activation: %+v\n", activation)
+	return actions.NewInvokeActionOK().WithPayload(activation)
 }
 
 func actionRequest(istioHostAndPort string, actionHost string, path string, requestBody interface{}) (int, []byte, error) {
 	url := fmt.Sprintf("http://%s/%s", istioHostAndPort, path)
-	fmt.Printf("Sending POST to url %s\n", url)
+	fmt.Printf("Sending POST to url %s with host %s\n", url, actionHost)
 
 	body, err := json.Marshal(requestBody)
 	if err != nil {
@@ -394,7 +389,7 @@ func namespaceOrDefault(namespace string) string {
 }
 
 func sanitizeActionName(name string) string {
-	return strings.ToLower(name)
+	return strings.Replace(strings.ToLower(name), " ", "-", -1)
 }
 
 func errorMessageFromErr(err error) *models.ErrorMessage {
