@@ -19,19 +19,22 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/tools/cache"
 
 	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	knative "github.com/knative/serving/pkg/client/clientset/versioned"
+
+	"github.com/gofrs/uuid"
 )
 
-func configureActions(api *operations.KwskAPI, knativeClient *knative.Clientset) {
+func configureActions(api *operations.KwskAPI, knativeClient *knative.Clientset, cache cache.Store) {
 	api.ActionsDeleteActionHandler = actions.DeleteActionHandlerFunc(deleteActionFunc(knativeClient))
 
 	api.ActionsGetActionByNameHandler = actions.GetActionByNameHandlerFunc(getActionByNameFunc(knativeClient))
 
 	api.ActionsGetAllActionsHandler = actions.GetAllActionsHandlerFunc(getAllActionsFunc(knativeClient))
 
-	api.ActionsInvokeActionHandler = actions.InvokeActionHandlerFunc(invokeActionFunc(knativeClient))
+	api.ActionsInvokeActionHandler = actions.InvokeActionHandlerFunc(invokeActionFunc(knativeClient, cache))
 
 	api.ActionsUpdateActionHandler = actions.UpdateActionHandlerFunc(updateActionFunc(knativeClient))
 }
@@ -226,11 +229,12 @@ func getActionParameters(params actions.InvokeActionParams) interface{} {
 	return params.Payload
 }
 
-func invokeActionFunc(knativeClient *knative.Clientset) actions.InvokeActionHandlerFunc {
+func invokeActionFunc(knativeClient *knative.Clientset, cache cache.Store) actions.InvokeActionHandlerFunc {
 	return func(params actions.InvokeActionParams, principal *models.Principal) middleware.Responder {
 		serviceName := sanitizeActionName(params.ActionName)
 		namespace := namespaceOrDefault(params.Namespace)
 		blocking := params.Blocking != nil && *params.Blocking == "true"
+		result := params.Result != nil && *params.Result == "true"
 
 		service, err := knativeClient.ServingV1alpha1().Services(namespace).Get(serviceName, metav1.GetOptions{})
 		if err != nil {
@@ -260,7 +264,7 @@ func invokeActionFunc(knativeClient *knative.Clientset) actions.InvokeActionHand
 		if errResponder != nil {
 			return errResponder
 		}
-		return runAction(istioHostAndPort, actionHost, service.Name, namespace, getActionParameters(params), blocking)
+		return runAction(istioHostAndPort, actionHost, service.Name, namespace, getActionParameters(params), blocking, result, cache)
 	}
 }
 
@@ -303,7 +307,9 @@ func initAction(istioHostAndPort string, actionHost string, actionCode string) m
 	return nil
 }
 
-func runAction(istioHostAndPort string, actionHost string, name string, namespace string, params interface{}, blocking bool) middleware.Responder {
+func runAction(istioHostAndPort string, actionHost string, name string, namespace string, params interface{}, blocking bool, result bool, cache cache.Store) middleware.Responder {
+
+	start := time.Now().UnixNano() / 1000000 // milliseconds since epoch
 
 	runBody := &ActionRunMessage{
 		Value: params,
@@ -333,24 +339,50 @@ func runAction(istioHostAndPort string, actionHost string, name string, namespac
 	activationResult := &models.ActivationResult{
 		Result:  resultJson,
 		Success: true,
+		Status:  "success",
 	}
 
-	activationId := "dummyactivationid"
-	if blocking {
-		logs := []string{}
-		activation := &models.Activation{
-			ActivationID: &activationId,
-			Name:         &name,
-			Namespace:    &namespace,
-			Response:     activationResult,
-			Logs:         logs,
+	newUuid, err := uuid.NewV4()
+	if err != nil {
+		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessageFromErr(err))
+	}
+	activationId := newUuid.String()
+	logs := []string{}
+	annotations := []*models.KeyValue{}
+	end := time.Now().UnixNano() / 1000000 // milliseconds since epoch
+	duration := end - start
+	activation := models.Activation{
+		ActivationID: &activationId,
+		Name:         &name,
+		Namespace:    &namespace,
+		Response:     activationResult,
+		Start:        &start,
+		End:          end,
+		Duration:     duration,
+		Logs:         logs,
+		Annotations:  annotations,
+	}
+
+	err = cache.Add(activation)
+	if err != nil {
+		msg := fmt.Sprintf("Error storing activation record: %s\n", err)
+		errorMessage := &models.ErrorMessage{
+			Error: &msg,
 		}
-		fmt.Printf("Activation: %+v\n", activation)
+		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
+	}
+
+	if result {
+		fmt.Printf("Returning Activation result: %+v\n", resultJson)
+		return actions.NewInvokeActionOK().WithPayload(resultJson)
+	} else if blocking {
+		fmt.Printf("Returning Activation: %+v\n", activation)
 		return actions.NewInvokeActionOK().WithPayload(activation)
 	} else {
 		payload := &models.ActivationID{
 			ActivationID: &activationId,
 		}
+		fmt.Printf("Returning ActivationId: %s\n", activationId)
 		return actions.NewInvokeActionAccepted().WithPayload(payload)
 	}
 }

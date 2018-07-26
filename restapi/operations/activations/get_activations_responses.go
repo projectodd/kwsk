@@ -25,7 +25,7 @@ type GetActivationsOK struct {
 	/*
 	  In: Body
 	*/
-	Payload []*models.EntityBrief `json:"body,omitempty"`
+	Payload []*models.Activation `json:"body,omitempty"`
 }
 
 // NewGetActivationsOK creates GetActivationsOK with default headers values
@@ -35,13 +35,13 @@ func NewGetActivationsOK() *GetActivationsOK {
 }
 
 // WithPayload adds the payload to the get activations o k response
-func (o *GetActivationsOK) WithPayload(payload []*models.EntityBrief) *GetActivationsOK {
+func (o *GetActivationsOK) WithPayload(payload []*models.Activation) *GetActivationsOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get activations o k response
-func (o *GetActivationsOK) SetPayload(payload []*models.EntityBrief) {
+func (o *GetActivationsOK) SetPayload(payload []*models.Activation) {
 	o.Payload = payload
 }
 
@@ -51,7 +51,7 @@ func (o *GetActivationsOK) WriteResponse(rw http.ResponseWriter, producer runtim
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make([]*models.EntityBrief, 0, 50)
+		payload = make([]*models.Activation, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

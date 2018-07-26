@@ -26,6 +26,12 @@
   version = "v9"
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
   name = "github.com/docker/go-units"
   packages = ["."]
   revision = "47565b4f722fb6ceae66b95f853feed578a4a51c"
@@ -107,6 +113,12 @@
   revision = "b0a3ed684d0fdd3e1eda00433382188ce8aa7169"
 
 [[projects]]
+  name = "github.com/gofrs/uuid"
+  packages = ["."]
+  revision = "3a54a6416087bae7aa0ac32dd79fe1bf87bc99e4"
+  version = "v2.1.0"
+
+[[projects]]
   name = "github.com/gogo/protobuf"
   packages = [
     "proto",
@@ -148,6 +160,15 @@
   ]
   revision = "7c663266750e7d82587642f65e60bc4083f1f84e"
   version = "v0.2.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/golang-lru"
+  packages = [
+    ".",
+    "simplelru"
+  ]
+  revision = "0fb14efe8c47ae851c0034ed7a448854d3d34cf3"
 
 [[projects]]
   branch = "master"
@@ -383,6 +404,7 @@
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
+    "pkg/apis/meta/internalversion",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
     "pkg/apis/meta/v1beta1",
@@ -400,7 +422,9 @@
     "pkg/runtime/serializer/versioning",
     "pkg/selection",
     "pkg/types",
+    "pkg/util/cache",
     "pkg/util/clock",
+    "pkg/util/diff",
     "pkg/util/errors",
     "pkg/util/framer",
     "pkg/util/intstr",
@@ -434,17 +458,21 @@
     "rest/watch",
     "third_party/forked/golang/template",
     "tools/auth",
+    "tools/cache",
     "tools/clientcmd",
     "tools/clientcmd/api",
     "tools/clientcmd/api/latest",
     "tools/clientcmd/api/v1",
     "tools/metrics",
+    "tools/pager",
     "transport",
+    "util/buffer",
     "util/cert",
     "util/flowcontrol",
     "util/homedir",
     "util/integer",
-    "util/jsonpath"
+    "util/jsonpath",
+    "util/retry"
   ]
   revision = "23781f4d6632d88e869066eaebb743857aa1ef9b"
   version = "v7.0.0"
@@ -452,6 +480,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c003f2fd225d67d05af32d4b6b2fa9df1247c102cde02a11772bc664b88aeb67"
+  inputs-digest = "12c17ba5a4c845c2649a286670c48fa599b1850dc014883678d41881533711e5"
   solver-name = "gps-cdcl"
   solver-version = 1

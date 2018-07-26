@@ -4,10 +4,12 @@ package restapi
 
 import (
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
@@ -19,6 +21,7 @@ import (
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
 	knative "github.com/knative/serving/pkg/client/clientset/versioned"
@@ -55,19 +58,21 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	knativeClient, err := knativeClient()
-	if err != nil {
-		log.Fatalf("Error creating Knative client: %s\n", err.Error())
-	}
-
 	// Applies when the Authorization header is set with the Basic scheme
 	api.BasicAuthAuth = func(user string, pass string) (*models.Principal, error) {
 		principal := models.Principal("someuser")
 		return &principal, nil
 	}
 
-	configureActions(api, knativeClient)
-	configureActivations(api, knativeClient)
+	knativeClient, err := knativeClient()
+	if err != nil {
+		log.Fatalf("Error creating Knative client: %s\n", err.Error())
+	}
+
+	activationCache := cache.NewTTLStore(activationKeyFunc, 30*time.Minute)
+
+	configureActions(api, knativeClient, activationCache)
+	configureActivations(api, knativeClient, activationCache)
 	configurePackages(api, knativeClient)
 	configureRules(api, knativeClient)
 	configureTriggers(api, knativeClient)
@@ -76,6 +81,13 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 	api.ServerShutdown = func() {}
 
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))
+}
+
+func activationKeyFunc(obj interface{}) (string, error) {
+	if activation, ok := obj.(models.Activation); ok {
+		return *activation.ActivationID, nil
+	}
+	return "", fmt.Errorf("object is not an activation: %v", obj)
 }
 
 // The TLS configuration before HTTPS server starts.

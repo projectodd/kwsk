@@ -624,7 +624,7 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/EntityBrief"
+                "$ref": "#/definitions/Activation"
               }
             }
           },
@@ -3302,7 +3302,7 @@ func init() {
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/EntityBrief"
+                "$ref": "#/definitions/Activation"
               }
             }
           },
