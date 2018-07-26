@@ -111,38 +111,6 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 			return actions.NewUpdateActionInternalServerError().WithPayload(errorMessageFromErr(err))
 		}
 
-		// Wait for the service to be ready
-		readyTimeout := 300 * time.Second
-		if !service.Status.IsReady() {
-			wi, err := knativeClient.ServingV1alpha1().Services(namespace).Watch(metav1.ListOptions{
-				FieldSelector: fmt.Sprintf("metadata.name=%s", serviceName),
-			})
-			if err != nil {
-				fmt.Println("Error wait for action create: ", err)
-				return actions.NewUpdateActionInternalServerError().WithPayload(errorMessageFromErr(err))
-			}
-			defer wi.Stop()
-			ch := wi.ResultChan()
-		ServiceReady:
-			for {
-				select {
-				case <-time.After(readyTimeout):
-					fmt.Println("Timeout waiting for action create: ", err)
-					return actions.NewUpdateActionInternalServerError().WithPayload(errorMessageFromErr(err))
-				case event := <-ch:
-					if service, ok := event.Object.(*v1alpha1.Service); ok {
-						if !service.Status.IsReady() {
-							continue
-						}
-						break ServiceReady
-					} else {
-						fmt.Println("Unexpected result type for action: ", err)
-						return actions.NewUpdateActionInternalServerError().WithPayload(errorMessageFromErr(err))
-					}
-				}
-			}
-		}
-
 		action, err := getActionByName(knativeClient, name, namespace)
 		if err != nil {
 			fmt.Println("Error retrieving updated action: ", err)
