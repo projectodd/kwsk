@@ -8,7 +8,7 @@ TESTDIR="$SCRIPTDIR/.."
 OWSK_HOME=$TESTDIR/openwhisk
 
 if [ ! -d "$OWSK_HOME" ]; then
-  git clone https://github.com/apache/incubator-openwhisk.git $OWSK_HOME
+  git clone -b kwsk-tests --single-branch https://github.com/projectodd/incubator-openwhisk.git $OWSK_HOME
   cp $TESTDIR/etc/openwhisk-server-cert.pem $OWSK_HOME/ansible/roles/nginx/files/
 fi
 sed -e "s:OPENWHISK_HOME:$OWSK_HOME:" <$TESTDIR/etc/whisk.properties >$OWSK_HOME/whisk.properties
