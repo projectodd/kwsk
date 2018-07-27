@@ -61,12 +61,28 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		name := params.ActionName
 		serviceName := sanitizeActionName(name)
 		namespace := namespaceOrDefault(params.Namespace)
-		var image string
+		version := params.Action.Version
+		if version == "" {
+			version = "0.0.1"
+		}
 
 		annotations := make(map[string]string)
 		annotations["kwsk_action_name"] = name
-		annotations["kwsk_action_version"] = params.Action.Version
+		annotations["kwsk_action_version"] = version
 
+		for _, kv := range params.Action.Parameters {
+			key := fmt.Sprintf("kwsk_action_param_%s", kv.Key)
+			value := fmt.Sprintf("%s", kv.Value)
+			annotations[key] = value
+		}
+
+		for _, kv := range params.Action.Annotations {
+			key := fmt.Sprintf("kwsk_action_anno_%s", kv.Key)
+			value := fmt.Sprintf("%s", kv.Value)
+			annotations[key] = value
+		}
+
+		var image string
 		if params.Action.Exec != nil {
 			image = params.Action.Exec.Image
 			annotations["kwsk_action_kind"] = params.Action.Exec.Kind
@@ -111,7 +127,7 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 			return actions.NewUpdateActionInternalServerError().WithPayload(errorMessageFromErr(err))
 		}
 
-		action, err := getActionByName(knativeClient, name, namespace)
+		action, err := getActionByName(knativeClient, name, namespace, false)
 		if err != nil {
 			fmt.Println("Error retrieving updated action: ", err)
 			return actions.NewUpdateActionInternalServerError().WithPayload(errorMessageFromErr(err))
@@ -126,6 +142,26 @@ func serviceToAction(service *v1alpha1.Service) *models.Action {
 	kind := objectMeta.Annotations["kwsk_action_kind"]
 	version := objectMeta.Annotations["kwsk_action_version"]
 	code := objectMeta.Annotations["kwsk_action_code"]
+
+	var params []*models.KeyValue
+	var annotations []*models.KeyValue
+	for key, value := range objectMeta.Annotations {
+		if strings.HasPrefix(key, "kwsk_action_param_") {
+			param := &models.KeyValue{
+				Key:   strings.TrimPrefix(key, "kwsk_action_param_"),
+				Value: value,
+			}
+			params = append(params, param)
+		}
+		if strings.HasPrefix(key, "kwsk_action_anno_") {
+			annotation := &models.KeyValue{
+				Key:   strings.TrimPrefix(key, "kwsk_action_anno_"),
+				Value: value,
+			}
+			annotations = append(annotations, annotation)
+		}
+	}
+
 	return &models.Action{
 		Name:      &name,
 		Namespace: &objectMeta.Namespace,
@@ -135,22 +171,32 @@ func serviceToAction(service *v1alpha1.Service) *models.Action {
 			Kind:  kind,
 			Code:  code,
 		},
+		Parameters:  params,
+		Annotations: annotations,
 	}
 }
 
-func getActionByName(knativeClient *knative.Clientset, name string, namespace string) (*models.Action, error) {
+func getActionByName(knativeClient *knative.Clientset, name string, namespace string, includeCode bool) (*models.Action, error) {
 	serviceName := sanitizeActionName(name)
 	namespace = namespaceOrDefault(namespace)
 	service, err := knativeClient.ServingV1alpha1().Services(namespace).Get(serviceName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
-	return serviceToAction(service), nil
+	action := serviceToAction(service)
+	if !includeCode {
+		action.Exec.Code = ""
+	}
+	return action, nil
 }
 
 func getActionByNameFunc(knativeClient *knative.Clientset) actions.GetActionByNameHandlerFunc {
 	return func(params actions.GetActionByNameParams, principal *models.Principal) middleware.Responder {
-		action, err := getActionByName(knativeClient, params.ActionName, params.Namespace)
+		var code bool
+		if params.Code != nil {
+			code = *params.Code
+		}
+		action, err := getActionByName(knativeClient, params.ActionName, params.Namespace, code)
 		if err != nil {
 			errorMessage := errorMessageFromErr(err)
 			if errors.IsNotFound(err) {
@@ -197,6 +243,49 @@ func getActionParameters(params actions.InvokeActionParams) interface{} {
 	return params.Payload
 }
 
+func withRoutesReady(knativeClient *knative.Clientset, service *v1alpha1.Service) (*v1alpha1.Service, error) {
+	// Wait for the service routes to be ready
+	readyTimeout := 60 * time.Second
+	if !serviceRoutesReady(service) {
+		wi, err := knativeClient.ServingV1alpha1().Services(service.Namespace).Watch(metav1.ListOptions{
+			FieldSelector: fmt.Sprintf("metadata.name=%s", service.Name),
+		})
+		if err != nil {
+			fmt.Println("Error wait for service route readiness: ", err)
+			return service, err
+		}
+		defer wi.Stop()
+		ch := wi.ResultChan()
+	ServiceReady:
+		for {
+			select {
+			case <-time.After(readyTimeout):
+				fmt.Println("Timeout waiting for service route readiness: ", err)
+				return service, err
+			case event := <-ch:
+				if newService, ok := event.Object.(*v1alpha1.Service); ok {
+					if !serviceRoutesReady(newService) {
+						continue
+					}
+					service = newService
+					break ServiceReady
+				} else {
+					fmt.Println("Unexpected result type for service: ", err)
+					return service, err
+				}
+			}
+		}
+	}
+	return service, nil
+}
+
+func serviceRoutesReady(service *v1alpha1.Service) bool {
+	if c := service.Status.GetCondition(v1alpha1.ServiceConditionRoutesReady); c != nil {
+		return c.Status == corev1.ConditionTrue
+	}
+	return false
+}
+
 func invokeActionFunc(knativeClient *knative.Clientset, cache cache.Store) actions.InvokeActionHandlerFunc {
 	return func(params actions.InvokeActionParams, principal *models.Principal) middleware.Responder {
 		serviceName := sanitizeActionName(params.ActionName)
@@ -209,6 +298,14 @@ func invokeActionFunc(knativeClient *knative.Clientset, cache cache.Store) actio
 			errorMessage := errorMessageFromErr(err)
 			if errors.IsNotFound(err) {
 				return actions.NewInvokeActionNotFound().WithPayload(errorMessage)
+			}
+			return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
+		}
+		service, err = withRoutesReady(knativeClient, service)
+		if err != nil {
+			msg := "Error waiting for action readiness\n"
+			errorMessage := &models.ErrorMessage{
+				Error: &msg,
 			}
 			return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
 		}
