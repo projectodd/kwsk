@@ -245,7 +245,7 @@ func getActionParameters(params actions.InvokeActionParams) interface{} {
 
 func withRoutesReady(knativeClient *knative.Clientset, service *v1alpha1.Service) (*v1alpha1.Service, error) {
 	// Wait for the service routes to be ready
-	readyTimeout := 60 * time.Second
+	readyTimeout := 5 * time.Minute
 	if !serviceRoutesReady(service) {
 		wi, err := knativeClient.ServingV1alpha1().Services(service.Namespace).Watch(metav1.ListOptions{
 			FieldSelector: fmt.Sprintf("metadata.name=%s", service.Name),
