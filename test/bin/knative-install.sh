@@ -35,7 +35,7 @@ fi
 
 
 # install knative
-curl -L https://storage.googleapis.com/knative-releases/serving/latest/release-lite.yaml \
+curl -L https://storage.googleapis.com/knative-releases/serving/latest/release-no-mon.yaml \
   | sed 's/LoadBalancer/NodePort/' \
   | kubectl apply -f -
 
