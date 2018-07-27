@@ -22,7 +22,7 @@ until [ $ELAPSED -ge $TIMEOUT ]; do
     break
   fi
 
-  let TIMEOUT=TIMEOUT+$INTERVAL
+  let ELAPSED=ELAPSED+$INTERVAL
   sleep $INTERVAL
 done
 if [ "$PASSED" = false ]; then
@@ -49,7 +49,7 @@ until [ $ELAPSED -ge $TIMEOUT ]; do
     break
   fi
 
-  let TIMEOUT=TIMEOUT+$INTERVAL
+  let ELAPSED=ELAPSED+$INTERVAL
   sleep $INTERVAL
 done
 if [ "$PASSED" = false ]; then
