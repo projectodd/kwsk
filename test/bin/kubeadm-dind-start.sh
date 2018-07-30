@@ -19,6 +19,3 @@ bash -x dind-cluster.sh clean
 
 # Bring Kubernetes up
 bash -x dind-cluster.sh up
-
-# Default to the newly created kubectl context
-kubectl config use-context dind
