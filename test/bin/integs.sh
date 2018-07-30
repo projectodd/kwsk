@@ -14,6 +14,14 @@ if [ ! -d "$OWSK_HOME" ]; then
 fi
 sed -e "s:OPENWHISK_HOME:$OWSK_HOME:; s/:8080/:$KWSK_PORT/" <$TESTDIR/etc/whisk.properties >$OWSK_HOME/whisk.properties
 
+cat >$OWSK_HOME/tests/src/test/resources/application.conf <<EOF
+# Blocking requests timeout by default after ~ 60s
+akka.http.client.idle-timeout = 180 s
+akka.http.host-connection-pool.idle-timeout = 180 s
+akka.http.host-connection-pool.client.idle-timeout = 180 s
+EOF
+
+
 if [ "$(kubectl config current-context)" == "dind" ]; then
   ISTIO="localhost:32380"
 else
