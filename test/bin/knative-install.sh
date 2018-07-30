@@ -1,6 +1,8 @@
 #!/bin/bash
 set -x
 
+kubectl label namespace istio-system istio-injection=disabled
+
 # install istio
 curl -L https://storage.googleapis.com/knative-releases/serving/latest/istio.yaml \
   | sed 's/LoadBalancer/NodePort/' \
