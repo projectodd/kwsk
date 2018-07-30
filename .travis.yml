@@ -23,19 +23,11 @@ before_install:
 install:
 # Make root mounted as rshared to fix kube-dns issues.
 - sudo mount --make-rshared /
-# # Download kubectl, which is a requirement for using minikube.
-# - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.10.4/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-# # Download minikube.
-# - curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0.28.2/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-# # Run it
-# - sudo ./test/bin/minikube-start.sh
-# # Fix the kubectl context, as it's often stale.
-# - minikube update-context
 # Download kubeadm-dind-cluster script
 - curl -Lo dind-cluster.sh https://cdn.rawgit.com/kubernetes-sigs/kubeadm-dind-cluster/master/fixed/dind-cluster-v1.10.sh && chmod +x dind-cluster.sh && sudo mv dind-cluster.sh /usr/local/bin/
-# Where to put the matching kubectl
+# Tell kubeadm-dind-cluster where to put kubectl
 - export KUBECTL_DIR="${HOME}/.kubeadm-dind-cluster"
-# Run it
+# Start Kubernetes
 - ./test/bin/kubeadm-dind-start.sh
 # Add Kubectl directory to the PATH.
 - export PATH="${KUBECTL_DIR}:$PATH"
@@ -54,4 +46,4 @@ script:
 after_failure:
 - echo "************* FAILURE *************"
 - cat kwsk.log
-
+- dind-cluster.sh dump
