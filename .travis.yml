@@ -5,12 +5,13 @@ services: docker
 language: go
 
 env:
-  global:
 matrix:
   include:
   - name: "Whisk Action Tests"
     env: TESTS="system.basic.WskAction*"
   - name: "Whisk Basic Rest Tests"
+    env: TESTS="system.basic.WskRest*"
+  allow_failures:
     env: TESTS="system.basic.WskRest*"
 
 before_install:
