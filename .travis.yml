@@ -13,7 +13,7 @@ matrix:
   - name: "Whisk Basic Rest Tests"
     env: TESTS="system.basic.WskRest*"
   allow_failures:
-    env: TESTS="system.basic.WskRest*"
+  - env: TESTS="system.basic.WskRest*"
 
 before_install:
 - sudo apt-get update -qq
