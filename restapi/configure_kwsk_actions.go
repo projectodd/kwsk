@@ -345,16 +345,18 @@ func initAction(istioHostAndPort string, actionHost string, actionCode string) m
 	var err error
 
 	// Wait for the action to be ready
-	readyTimeout := 60 * time.Second
+	readyTimeout := 5 * time.Minute
 	err = wait.PollImmediate(1*time.Second, readyTimeout, func() (bool, error) {
 		resStatus, resBody, err = actionRequest(istioHostAndPort, actionHost, "init", initBody)
 		if err != nil {
+			fmt.Printf("Action not yet ready: %s\n", err)
 			return false, err
 		}
 		return resStatus != http.StatusNotFound && resStatus != http.StatusServiceUnavailable, nil
 	})
 
 	if err != nil {
+		fmt.Printf("Error waiting on action to become ready: %s\n", err)
 		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessageFromErr(err))
 	}
 
@@ -366,6 +368,7 @@ func initAction(istioHostAndPort string, actionHost string, actionCode string) m
 		errorMessage := &models.ErrorMessage{
 			Error: &msg,
 		}
+		fmt.Println(msg)
 		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
 	}
 
@@ -381,6 +384,7 @@ func runAction(istioHostAndPort string, actionHost string, name string, namespac
 	}
 	resStatus, resBody, err := actionRequest(istioHostAndPort, actionHost, "run", runBody)
 	if err != nil {
+		fmt.Printf("Error running action: %s\n", err)
 		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessageFromErr(err))
 	}
 
@@ -389,6 +393,7 @@ func runAction(istioHostAndPort string, actionHost string, name string, namespac
 		errorMessage := &models.ErrorMessage{
 			Error: &msg,
 		}
+		fmt.Println(msg)
 		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
 	}
 
@@ -399,6 +404,7 @@ func runAction(istioHostAndPort string, actionHost string, name string, namespac
 		errorMessage := &models.ErrorMessage{
 			Error: &msg,
 		}
+		fmt.Println(msg)
 		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
 	}
 	activationResult := &models.ActivationResult{
@@ -409,6 +415,7 @@ func runAction(istioHostAndPort string, actionHost string, name string, namespac
 
 	newUuid, err := uuid.NewV4()
 	if err != nil {
+		fmt.Printf("Error generating activationId: %s\n", err)
 		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessageFromErr(err))
 	}
 	activationId := newUuid.String()
@@ -434,6 +441,7 @@ func runAction(istioHostAndPort string, actionHost string, name string, namespac
 		errorMessage := &models.ErrorMessage{
 			Error: &msg,
 		}
+		fmt.Println(msg)
 		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
 	}
 
