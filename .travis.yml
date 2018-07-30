@@ -4,10 +4,8 @@ services: docker
 
 language: go
 
-# This moves Kubernetes specific config files.
 env:
   global:
-  - CHANGE_MINIKUBE_NONE_USER=true
 matrix:
   include:
   - name: "Whisk Action Tests"
@@ -27,10 +25,10 @@ install:
 - curl -Lo dind-cluster.sh https://cdn.rawgit.com/kubernetes-sigs/kubeadm-dind-cluster/master/fixed/dind-cluster-v1.10.sh && chmod +x dind-cluster.sh && sudo mv dind-cluster.sh /usr/local/bin/
 # Tell kubeadm-dind-cluster where to put kubectl
 - export KUBECTL_DIR="${HOME}/.kubeadm-dind-cluster"
-# Start Kubernetes
-- ./test/bin/kubeadm-dind-start.sh
 # Add Kubectl directory to the PATH.
 - export PATH="${KUBECTL_DIR}:$PATH"
+# Start Kubernetes
+- ./test/bin/kubeadm-dind-start.sh
 # Default to the newly created kubectl context
 - kubectl config use-context dind
 # Wait for Kubernetes to be up and ready.

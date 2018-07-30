@@ -7,7 +7,7 @@ export POD_NETWORK_CIDR="10.244.0.0/16"
 export SKIP_SNAPSHOT=y
 
 # Only run on 1 Node, for now
-export NUM_NODES=1
+export NUM_NODES=0
 
 # # Add the required cluster config for Knative serving
 # export CONTROLLER_MANAGER_cluster_signing_cert_file="/var/lib/localkube/certs/ca.crt"

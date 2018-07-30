@@ -13,7 +13,15 @@ if [ ! -d "$OWSK_HOME" ]; then
   cp $TESTDIR/etc/openwhisk-server-cert.pem $OWSK_HOME/ansible/roles/nginx/files/
 fi
 sed -e "s:OPENWHISK_HOME:$OWSK_HOME:; s/:8080/:$KWSK_PORT/" <$TESTDIR/etc/whisk.properties >$OWSK_HOME/whisk.properties
-ISTIO=$(minikube ip):$(kubectl get svc knative-ingressgateway -n istio-system -o 'jsonpath={.spec.ports[?(@.port==80)].nodePort}')
+
+if [ "$(kubectl config current-context)" == "minikube" ]; then
+  NODE_IP=$(minikube ip)
+else
+  NODE_NAME=$(kubectl get node --no-headers | head -n 1 | awk '{print $1}')
+  NODE_IP=$(kubectl get node ${NODE_NAME} -o 'jsonpath={.status.addresses[?(@.type=="InternalIP")].address}')
+fi
+NODE_PORT=$(kubectl get svc knative-ingressgateway -n istio-system -o 'jsonpath={.spec.ports[?(@.port==80)].nodePort}')
+ISTIO=${NODE_IP}:${NODE_PORT}
 
 nohup go run $TESTDIR/../cmd/kwsk-server/main.go --port $KWSK_PORT --istio $ISTIO >kwsk.log 2>&1 &
 KWSK_PID=$!
