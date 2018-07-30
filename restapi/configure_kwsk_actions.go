@@ -3,6 +3,7 @@ package restapi
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -16,7 +17,7 @@ import (
 	"github.com/projectodd/kwsk/restapi/operations/actions"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
@@ -46,7 +47,7 @@ func deleteActionFunc(knativeClient *knative.Clientset) actions.DeleteActionHand
 		err := knativeClient.ServingV1alpha1().Services(namespace).Delete(serviceName, &metav1.DeleteOptions{})
 		if err != nil {
 			errorMessage := errorMessageFromErr(err)
-			if errors.IsNotFound(err) {
+			if k8sErrors.IsNotFound(err) {
 				return actions.NewDeleteActionNotFound().WithPayload(errorMessage)
 			}
 			return actions.NewDeleteActionInternalServerError().WithPayload(errorMessage)
@@ -199,7 +200,7 @@ func getActionByNameFunc(knativeClient *knative.Clientset) actions.GetActionByNa
 		action, err := getActionByName(knativeClient, params.ActionName, params.Namespace, code)
 		if err != nil {
 			errorMessage := errorMessageFromErr(err)
-			if errors.IsNotFound(err) {
+			if k8sErrors.IsNotFound(err) {
 				return actions.NewGetActionByNameNotFound().WithPayload(errorMessage)
 			}
 			return actions.NewGetActionByNameInternalServerError().WithPayload(errorMessage)
@@ -260,8 +261,7 @@ func withRoutesReady(knativeClient *knative.Clientset, service *v1alpha1.Service
 		for {
 			select {
 			case <-time.After(readyTimeout):
-				fmt.Println("Timeout waiting for service route readiness: ", err)
-				return service, err
+				return service, errors.New("Timeout waiting for service route readiness")
 			case event := <-ch:
 				if newService, ok := event.Object.(*v1alpha1.Service); ok {
 					if !serviceRoutesReady(newService) {
@@ -270,8 +270,7 @@ func withRoutesReady(knativeClient *knative.Clientset, service *v1alpha1.Service
 					service = newService
 					break ServiceReady
 				} else {
-					fmt.Println("Unexpected result type for service: ", err)
-					return service, err
+					fmt.Printf("Unexpected result type for service: %s", event.Object)
 				}
 			}
 		}
@@ -296,13 +295,14 @@ func invokeActionFunc(knativeClient *knative.Clientset, cache cache.Store) actio
 		service, err := knativeClient.ServingV1alpha1().Services(namespace).Get(serviceName, metav1.GetOptions{})
 		if err != nil {
 			errorMessage := errorMessageFromErr(err)
-			if errors.IsNotFound(err) {
+			if k8sErrors.IsNotFound(err) {
 				return actions.NewInvokeActionNotFound().WithPayload(errorMessage)
 			}
 			return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
 		}
 		service, err = withRoutesReady(knativeClient, service)
 		if err != nil {
+			fmt.Printf("Error waiting for action readiness: %s\n", err)
 			msg := "Error waiting for action readiness\n"
 			errorMessage := &models.ErrorMessage{
 				Error: &msg,
