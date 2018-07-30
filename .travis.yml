@@ -36,7 +36,7 @@ install:
 # Where to put the matching kubectl
 - export KUBECTL_DIR="${HOME}/.kubeadm-dind-cluster"
 # Run it
-- sudo ./test/bin/kubeadm-dind-start.sh
+- ./test/bin/kubeadm-dind-start.sh
 # Add Kubectl directory to the PATH.
 - export PATH="${KUBECTL_DIR}:$PATH"
 # Default to the newly created kubectl context
