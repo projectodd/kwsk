@@ -35,7 +35,7 @@ else
   ISTIO=${NODE_IP}:${NODE_PORT}
 fi
 
-nohup go run $TESTDIR/../cmd/kwsk-server/main.go --port $KWSK_PORT --istio $ISTIO >kwsk.log 2>&1 &
+nohup go run $TESTDIR/../cmd/kwsk-server/main.go --port $KWSK_PORT --istio $ISTIO --write-timeout 180s >kwsk.log 2>&1 &
 KWSK_PID=$!
 
 pushd $OWSK_HOME
