@@ -44,4 +44,4 @@ script:
 after_failure:
 - echo "************* FAILURE *************"
 - cat kwsk.log
-- dind-cluster.sh dump
+- kubectl get all --all-namespaces -o wide
