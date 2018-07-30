@@ -233,7 +233,7 @@
     "pkg/client/clientset/versioned/typed/istio/v1alpha3",
     "pkg/client/clientset/versioned/typed/serving/v1alpha1"
   ]
-  revision = "913329c2f1a2020ff75881a08966c67d3318f391"
+  revision = "ac7027ef1dc799a108f18f9194ebe34c48ecadc8"
 
 [[projects]]
   branch = "master"
