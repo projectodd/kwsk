@@ -29,6 +29,7 @@ if [ "$PASSED" = false ]; then
   echo "Failed to deploy Istio within $TIMEOUT seconds"
   kubectl get pods -o wide -n istio-system
   kubectl describe pods -n istio-system
+  kubectl get all --all-namespaces
   kubectl describe node
   kubectl get events
   exit 1
@@ -57,6 +58,7 @@ if [ "$PASSED" = false ]; then
   echo "Failed to deploy Knative within $TIMEOUT seconds"
   kubectl get pods -o wide -n knative-serving
   kubectl describe pods -n knative-serving
+  kubectl get all --all-namespaces
   kubectl describe node
   kubectl get events
   exit 1
