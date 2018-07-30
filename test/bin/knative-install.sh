@@ -1,13 +1,13 @@
 #!/bin/bash
 set -x
 
-kubectl label namespace istio-system istio-injection=disabled
-
 # install istio
 curl -L https://storage.googleapis.com/knative-releases/serving/latest/istio.yaml \
   | sed 's/LoadBalancer/NodePort/' \
   | kubectl apply -f -
 
+# Don't try to inject in the istio-system namespace
+kubectl label namespace istio-system istio-injection=disabled
 # label the default namespace with istio-injection=enabled.
 kubectl label namespace default istio-injection=enabled
 
