@@ -6,6 +6,8 @@ curl -L https://storage.googleapis.com/knative-releases/serving/latest/istio.yam
   | sed 's/LoadBalancer/NodePort/' \
   | kubectl apply -f -
 
+# Don't try to inject in the istio-system namespace
+kubectl label namespace istio-system istio-injection=disabled
 # label the default namespace with istio-injection=enabled.
 kubectl label namespace default istio-injection=enabled
 
@@ -14,6 +16,7 @@ INTERVAL=5  # in seconds
 
 ELAPSED=0
 PASSED=false
+sleep $INTERVAL
 until [ $ELAPSED -ge $TIMEOUT ]; do
   kubectl get pods -n istio-system | grep -v -E "(Running|Completed|STATUS)"
   EXIT_STATUS=$?
@@ -43,6 +46,7 @@ curl -L https://storage.googleapis.com/knative-releases/serving/latest/release-n
 
 ELAPSED=0
 PASSED=false
+sleep $INTERVAL
 until [ $ELAPSED -ge $TIMEOUT ]; do
   kubectl get pods -n knative-serving | grep -v -E "(Running|Completed|STATUS)"
   EXIT_STATUS=$?
