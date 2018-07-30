@@ -16,6 +16,7 @@ INTERVAL=5  # in seconds
 
 ELAPSED=0
 PASSED=false
+sleep $INTERVAL
 until [ $ELAPSED -ge $TIMEOUT ]; do
   kubectl get pods -n istio-system | grep -v -E "(Running|Completed|STATUS)"
   EXIT_STATUS=$?
@@ -45,6 +46,7 @@ curl -L https://storage.googleapis.com/knative-releases/serving/latest/release-n
 
 ELAPSED=0
 PASSED=false
+sleep $INTERVAL
 until [ $ELAPSED -ge $TIMEOUT ]; do
   kubectl get pods -n knative-serving | grep -v -E "(Running|Completed|STATUS)"
   EXIT_STATUS=$?
