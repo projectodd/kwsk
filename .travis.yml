@@ -5,6 +5,7 @@ services: docker
 language: go
 
 env:
+  global:
 matrix:
   include:
   - name: "Whisk Action Tests"
