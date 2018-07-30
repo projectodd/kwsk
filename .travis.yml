@@ -29,8 +29,6 @@ install:
 - export PATH="${KUBECTL_DIR}:$PATH"
 # Start Kubernetes
 - ./test/bin/kubeadm-dind-start.sh
-# Default to the newly created kubectl context
-- kubectl config use-context dind
 # Wait for Kubernetes to be up and ready.
 - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done
 # Fetch go deps

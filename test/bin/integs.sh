@@ -14,9 +14,18 @@ if [ ! -d "$OWSK_HOME" ]; then
 fi
 sed -e "s:OPENWHISK_HOME:$OWSK_HOME:; s/:8080/:$KWSK_PORT/" <$TESTDIR/etc/whisk.properties >$OWSK_HOME/whisk.properties
 
-ISTIO="localhost:8181"
-nohup kubectl port-forward -n istio-system deployment/knative-ingressgateway 8181:80 >portforward.log 2>&1 &
-PORTFORWARD_PID=$!
+if [ "$(kubectl config current-context)" == "dind" ]; then
+  ISTIO="localhost:32380"
+else
+  if [ "$(kubectl config current-context)" == "minikube" ]; then
+    NODE_IP=$(minikube ip)
+  else
+    NODE_NAME=$(kubectl get node --no-headers | head -n 1 | awk '{print $1}')
+    NODE_IP=$(kubectl get node ${NODE_NAME} -o 'jsonpath={.status.addresses[?(@.type=="InternalIP")].address}')
+  fi
+  NODE_PORT=$(kubectl get svc knative-ingressgateway -n istio-system -o 'jsonpath={.spec.ports[?(@.port==80)].nodePort}')
+  ISTIO=${NODE_IP}:${NODE_PORT}
+fi
 
 nohup go run $TESTDIR/../cmd/kwsk-server/main.go --port $KWSK_PORT --istio $ISTIO >kwsk.log 2>&1 &
 KWSK_PID=$!
@@ -27,6 +36,4 @@ STATUS=$?
 popd
 
 pkill -P "$KWSK_PID"
-pkill -P "$PORTFORWARD_PID"
-
 exit $STATUS
