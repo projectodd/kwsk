@@ -9,8 +9,8 @@ env:
   - CHANGE_MINIKUBE_NONE_USER=true
 matrix:
   include:
-  - name: "Whisk Action Tests"
-    env: TESTS="system.basic.WskAction*"
+  # - name: "Whisk Action Tests"
+  #   env: TESTS="system.basic.WskAction*"
   - name: "Whisk Basic Rest Tests"
     env: TESTS="system.basic.WskRest*"
 
