@@ -458,12 +458,14 @@ func actionRequest(istioHostAndPort string, actionHost string, path string, requ
 
 	body, err := json.Marshal(requestBody)
 	if err != nil {
+		fmt.Printf("Error marshaling action request body: %s\n", err)
 		return 500, nil, err
 	}
 	fmt.Printf("Request Body: %s\n", body)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
+		fmt.Printf("Error creating http request for action: %s\n", err)
 		return 500, nil, err
 	}
 
@@ -472,6 +474,7 @@ func actionRequest(istioHostAndPort string, actionHost string, path string, requ
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
+		fmt.Printf("Error calling action http endpoint: %s\n", err)
 		return 500, nil, err
 	}
 
