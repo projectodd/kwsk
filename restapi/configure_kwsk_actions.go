@@ -53,6 +53,26 @@ func deleteActionFunc(knativeClient *knative.Clientset) actions.DeleteActionHand
 			return actions.NewDeleteActionInternalServerError().WithPayload(errorMessage)
 		}
 
+		// Wait for the action to be deleted
+		deleteTimeout := 1 * time.Minute
+		err = wait.PollImmediate(1*time.Second, deleteTimeout, func() (bool, error) {
+			_, serviceErr := knativeClient.ServingV1alpha1().Services(namespace).Get(serviceName, metav1.GetOptions{})
+			_, routeErr := knativeClient.ServingV1alpha1().Routes(namespace).Get(serviceName, metav1.GetOptions{})
+			if serviceErr != nil && k8sErrors.IsNotFound(serviceErr) && routeErr != nil && k8sErrors.IsNotFound(routeErr) {
+				// Service and Route are gone, so that's good enough
+				return true, nil
+			}
+			if serviceErr != nil {
+				return false, err
+			}
+			return false, nil
+		})
+
+		if err != nil {
+			fmt.Printf("Error waiting on action to delete: %s\n", err)
+			return actions.NewDeleteActionInternalServerError()
+		}
+
 		return actions.NewDeleteActionOK()
 	}
 }
