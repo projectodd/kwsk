@@ -237,11 +237,17 @@ type ActionRunMessage struct {
 	Value interface{} `json:"value"`
 }
 
-func getActionParameters(params actions.InvokeActionParams) interface{} {
-	if params.Payload == nil {
-		return map[string]string{}
+func getActionParameters(action *models.Action, params actions.InvokeActionParams) interface{} {
+	combinedParams := map[string]interface{}{}
+	for _, kv := range action.Parameters {
+		combinedParams[kv.Key] = kv.Value
 	}
-	return params.Payload
+	if payloadMap, ok := params.Payload.(map[string]interface{}); ok {
+		for k, v := range payloadMap {
+			combinedParams[k] = v
+		}
+	}
+	return combinedParams
 }
 
 func withRoutesReady(knativeClient *knative.Clientset, service *v1alpha1.Service) (*v1alpha1.Service, error) {
@@ -309,8 +315,8 @@ func invokeActionFunc(knativeClient *knative.Clientset, cache cache.Store) actio
 			}
 			return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
 		}
-		annotations := service.Annotations
 		actionHost := service.Status.Domain
+		action := serviceToAction(service)
 
 		// If we're running in-cluster this needs to be an internal
 		// hostname. If we're running outside the cluster, this needs
@@ -325,11 +331,11 @@ func invokeActionFunc(knativeClient *knative.Clientset, cache cache.Store) actio
 		}
 
 		// TODO: Don't init the action every time it's invoked
-		errResponder := initAction(istioHostAndPort, actionHost, annotations["kwsk_action_code"])
+		errResponder := initAction(istioHostAndPort, actionHost, action.Exec.Code)
 		if errResponder != nil {
 			return errResponder
 		}
-		return runAction(istioHostAndPort, actionHost, service.Name, namespace, getActionParameters(params), blocking, result, cache)
+		return runAction(istioHostAndPort, actionHost, service.Name, namespace, getActionParameters(action, params), blocking, result, cache)
 	}
 }
 
