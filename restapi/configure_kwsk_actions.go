@@ -42,7 +42,7 @@ func configureActions(api *operations.KwskAPI, knativeClient *knative.Clientset,
 
 func deleteActionFunc(knativeClient *knative.Clientset) actions.DeleteActionHandlerFunc {
 	return func(params actions.DeleteActionParams, principal *models.Principal) middleware.Responder {
-		serviceName := sanitizeActionName(params.ActionName)
+		serviceName := sanitizeObjectName(params.ActionName)
 		namespace := namespaceOrDefault(params.Namespace)
 		err := knativeClient.ServingV1alpha1().Services(namespace).Delete(serviceName, &metav1.DeleteOptions{})
 		if err != nil {
@@ -80,7 +80,7 @@ func deleteActionFunc(knativeClient *knative.Clientset) actions.DeleteActionHand
 func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHandlerFunc {
 	return func(params actions.UpdateActionParams, principal *models.Principal) middleware.Responder {
 		name := params.ActionName
-		serviceName := sanitizeActionName(name)
+		serviceName := sanitizeObjectName(name)
 		namespace := namespaceOrDefault(params.Namespace)
 		version := params.Action.Version
 		if version == "" {
@@ -198,7 +198,7 @@ func serviceToAction(service *v1alpha1.Service) *models.Action {
 }
 
 func getActionByName(knativeClient *knative.Clientset, name string, namespace string, includeCode bool) (*models.Action, error) {
-	serviceName := sanitizeActionName(name)
+	serviceName := sanitizeObjectName(name)
 	namespace = namespaceOrDefault(namespace)
 	service, err := knativeClient.ServingV1alpha1().Services(namespace).Get(serviceName, metav1.GetOptions{})
 	if err != nil {
@@ -313,7 +313,7 @@ func serviceRoutesReady(service *v1alpha1.Service) bool {
 
 func invokeActionFunc(knativeClient *knative.Clientset, cache cache.Store) actions.InvokeActionHandlerFunc {
 	return func(params actions.InvokeActionParams, principal *models.Principal) middleware.Responder {
-		serviceName := sanitizeActionName(params.ActionName)
+		serviceName := sanitizeObjectName(params.ActionName)
 		namespace := namespaceOrDefault(params.Namespace)
 		blocking := params.Blocking != nil && *params.Blocking == "true"
 		result := params.Result != nil && *params.Result == "true"
@@ -337,18 +337,7 @@ func invokeActionFunc(knativeClient *knative.Clientset, cache cache.Store) actio
 		}
 		actionHost := service.Status.Domain
 		action := serviceToAction(service)
-
-		// If we're running in-cluster this needs to be an internal
-		// hostname. If we're running outside the cluster, this needs
-		// to be the exposed route and/or nodeport. For now, don't
-		// worry about magic and expect it to be explicitly configured
-		// via a flag.
-		//
-		// host := "istio-ingress.istio-system.svc.cluster.local"
-		istioHostAndPort := kwskFlags.Istio
-		if istioHostAndPort == "" {
-			panic("Istio host and port must be provided via --istio flag to invoke actions")
-		}
+		istioHostAndPort := istioHostAndPort()
 
 		// TODO: Don't init the action every time it's invoked
 		errResponder := initAction(istioHostAndPort, actionHost, action.Exec.Code)
@@ -518,26 +507,4 @@ func actionRequest(istioHostAndPort string, actionHost string, path string, requ
 	fmt.Printf("Response Body: %s\n", string(resBody))
 
 	return res.StatusCode, resBody, nil
-}
-
-func namespaceOrDefault(namespace string) string {
-	if namespace == "_" {
-		// TODO: In OpenWhisk land, the "_" namespace means the
-		// default namespace of the authenticated user. Because we're
-		// not dealing with any auth yet, just hardcode this to the
-		// "default" namespace for now.
-		namespace = "default"
-	}
-	return namespace
-}
-
-func sanitizeActionName(name string) string {
-	return strings.Replace(strings.ToLower(name), " ", "-", -1)
-}
-
-func errorMessageFromErr(err error) *models.ErrorMessage {
-	msg := err.Error()
-	return &models.ErrorMessage{
-		Error: &msg,
-	}
 }

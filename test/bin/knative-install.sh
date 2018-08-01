@@ -68,5 +68,13 @@ if [ "$PASSED" = false ]; then
   exit 1
 fi
 
+# install knative eventing
+kubectl apply -f https://storage.googleapis.com/knative-releases/eventing/latest/release.yaml
+# and the stub bus
+kubectl apply -f https://storage.googleapis.com/knative-releases/eventing/latest/release-bus-stub.yaml
+kubectl apply -f https://storage.googleapis.com/knative-releases/eventing/latest/release-clusterbus-stub.yaml
+# and the Kubernetes Events source
+kubectl apply -f https://storage.googleapis.com/knative-releases/eventing/latest/release-source-k8sevents.yaml
+
 set +x
 echo "Knative successfully installed!"

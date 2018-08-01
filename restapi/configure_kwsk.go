@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	errors "github.com/go-openapi/errors"
@@ -24,7 +25,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
-	knative "github.com/knative/serving/pkg/client/clientset/versioned"
+	eventing "github.com/knative/eventing/pkg/client/clientset/versioned"
+	serving "github.com/knative/serving/pkg/client/clientset/versioned"
 )
 
 //go:generate swagger generate server --target .. --name Kwsk --spec ../apiv1swagger.json --principal models.Principal
@@ -64,19 +66,27 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 		return &principal, nil
 	}
 
-	knativeClient, err := knativeClient()
+	config, err := kubeConfig()
 	if err != nil {
-		log.Fatalf("Error creating Knative client: %s\n", err.Error())
+		log.Fatalf("Error creating Kubernetes client config: %s\n", err.Error())
+	}
+	servingClient, err := servingClient(config)
+	if err != nil {
+		log.Fatalf("Error creating Knative serving client: %s\n", err.Error())
+	}
+	eventingClient, err := eventingClient(config)
+	if err != nil {
+		log.Fatalf("Error creating Knative eventing client: %s\n", err.Error())
 	}
 
 	activationCache := cache.NewTTLStore(activationKeyFunc, 30*time.Minute)
 
-	configureActions(api, knativeClient, activationCache)
-	configureActivations(api, knativeClient, activationCache)
-	configurePackages(api, knativeClient)
-	configureRules(api, knativeClient)
-	configureTriggers(api, knativeClient)
-	configureNamespaces(api, knativeClient)
+	configureActions(api, servingClient, activationCache)
+	configureActivations(api, servingClient, activationCache)
+	configurePackages(api, servingClient)
+	configureRules(api, servingClient)
+	configureTriggers(api, servingClient, eventingClient)
+	configureNamespaces(api, servingClient)
 
 	api.ServerShutdown = func() {}
 
@@ -114,7 +124,7 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	return handler
 }
 
-func knativeClient() (*knative.Clientset, error) {
+func kubeConfig() (*rest.Config, error) {
 	var kubeconfig string
 	if kwskFlags.Kubeconfig != "" {
 		kubeconfig = kwskFlags.Kubeconfig
@@ -135,13 +145,25 @@ func knativeClient() (*knative.Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	return config, nil
+}
 
-	knativeClient, err := knative.NewForConfig(config)
+func servingClient(config *rest.Config) (*serving.Clientset, error) {
+	client, err := serving.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}
 
-	return knativeClient, nil
+	return client, nil
+}
+
+func eventingClient(config *rest.Config) (*eventing.Clientset, error) {
+	client, err := eventing.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
 }
 
 func homeDir() string {
@@ -150,3 +172,45 @@ func homeDir() string {
 	}
 	return os.Getenv("USERPROFILE") // windows
 }
+
+func namespaceOrDefault(namespace string) string {
+	if namespace == "_" {
+		// TODO: In OpenWhisk land, the "_" namespace means the
+		// default namespace of the authenticated user. Because we're
+		// not dealing with any auth yet, just hardcode this to the
+		// "default" namespace for now.
+		namespace = "default"
+	}
+	return namespace
+}
+
+func sanitizeObjectName(name string) string {
+	return strings.Replace(strings.ToLower(name), " ", "-", -1)
+}
+
+func errorMessageFromErr(err error) *models.ErrorMessage {
+	msg := err.Error()
+	return &models.ErrorMessage{
+		Error: &msg,
+	}
+}
+
+func istioHostAndPort() string {
+	// If we're running in-cluster this needs to be an internal
+	// hostname. If we're running outside the cluster, this needs
+	// to be the exposed route and/or nodeport. For now, don't
+	// worry about magic and expect it to be explicitly configured
+	// via a flag.
+	//
+	// host := "istio-ingress.istio-system.svc.cluster.local"
+	istioHostAndPort := kwskFlags.Istio
+	if istioHostAndPort == "" {
+		panic("Istio host and port must be provided via --istio flag to invoke actions")
+	}
+	return istioHostAndPort
+}
+
+const (
+	KwskName    string = "kwsk_name"
+	KwskVersion string = "kwsk_version"
+)
