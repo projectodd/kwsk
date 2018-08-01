@@ -88,8 +88,8 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		}
 
 		annotations := make(map[string]string)
-		annotations["kwsk_action_name"] = name
-		annotations["kwsk_action_version"] = version
+		annotations[KwskName] = name
+		annotations[KwskVersion] = version
 
 		for _, kv := range params.Action.Parameters {
 			key := fmt.Sprintf("kwsk_action_param_%s", kv.Key)
@@ -159,9 +159,9 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 
 func serviceToAction(service *v1alpha1.Service) *models.Action {
 	objectMeta := service.ObjectMeta
-	name := objectMeta.Annotations["kwsk_action_name"]
+	name := objectMeta.Annotations[KwskName]
 	kind := objectMeta.Annotations["kwsk_action_kind"]
-	version := objectMeta.Annotations["kwsk_action_version"]
+	version := objectMeta.Annotations[KwskVersion]
 	code := objectMeta.Annotations["kwsk_action_code"]
 
 	var params []*models.KeyValue
