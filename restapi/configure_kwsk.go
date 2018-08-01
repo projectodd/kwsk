@@ -84,7 +84,7 @@ func configureAPI(api *operations.KwskAPI) http.Handler {
 	configureActions(api, servingClient, activationCache)
 	configureActivations(api, servingClient, activationCache)
 	configurePackages(api, servingClient)
-	configureRules(api, servingClient)
+	configureRules(api, eventingClient)
 	configureTriggers(api, servingClient, eventingClient)
 	configureNamespaces(api, servingClient)
 
