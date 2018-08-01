@@ -160,6 +160,9 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 func serviceToAction(service *v1alpha1.Service) *models.Action {
 	objectMeta := service.ObjectMeta
 	name := objectMeta.Annotations[KwskName]
+	if name == "" {
+		name = objectMeta.Name
+	}
 	kind := objectMeta.Annotations["kwsk_action_kind"]
 	version := objectMeta.Annotations[KwskVersion]
 	code := objectMeta.Annotations["kwsk_action_code"]
