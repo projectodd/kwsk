@@ -91,12 +91,6 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		annotations[KwskName] = name
 		annotations[KwskVersion] = version
 
-		for _, kv := range params.Action.Parameters {
-			key := fmt.Sprintf("kwsk_action_param_%s", kv.Key)
-			value := fmt.Sprintf("%s", kv.Value)
-			annotations[key] = value
-		}
-
 		for _, kv := range params.Action.Annotations {
 			key := fmt.Sprintf("kwsk_action_anno_%s", kv.Key)
 			value := fmt.Sprintf("%s", kv.Value)
@@ -107,7 +101,6 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		if params.Action.Exec != nil {
 			image = params.Action.Exec.Image
 			annotations["kwsk_action_kind"] = params.Action.Exec.Kind
-			annotations["kwsk_action_code"] = params.Action.Exec.Code
 		}
 
 		configSpec := v1alpha1.ConfigurationSpec{
@@ -120,10 +113,32 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		if image == "" {
 			// TODO: Map the kind of the action to an image instead of
 			// just assuming everything is node8
-			image = "openwhisk/action-nodejs-v8"
+			image = "bbrowning/kwsk-action-nodejs-v8"
+		}
+
+		actionParamsMap := map[string]interface{}{}
+		for _, kv := range params.Action.Parameters {
+			actionParamsMap[kv.Key] = kv.Value
+		}
+		actionParamsJson, err := json.Marshal(actionParamsMap)
+		if err != nil {
+			fmt.Println("Error marshaling action parameters: ", err)
+			return actions.NewUpdateActionInternalServerError()
+		}
+
+		containerEnv := []corev1.EnvVar{
+			corev1.EnvVar{
+				Name:  "KWSK_ACTION_CODE",
+				Value: params.Action.Exec.Code,
+			},
+			corev1.EnvVar{
+				Name:  "KWSK_ACTION_PARAMS",
+				Value: string(actionParamsJson),
+			},
 		}
 		container := corev1.Container{
 			Image: image,
+			Env:   containerEnv,
 		}
 		configSpec.RevisionTemplate.Spec.Container = container
 
@@ -142,7 +157,7 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 
 		dbg := fmt.Sprintf("Creating service %+v\n", service)
 		fmt.Printf("%.2000s\n", dbg)
-		service, err := knativeClient.ServingV1alpha1().Services(namespace).Create(service)
+		service, err = knativeClient.ServingV1alpha1().Services(namespace).Create(service)
 		if err != nil {
 			fmt.Println("Error updating action: ", err)
 			return actions.NewUpdateActionInternalServerError().WithPayload(errorMessageFromErr(err))
@@ -165,18 +180,33 @@ func serviceToAction(service *v1alpha1.Service) *models.Action {
 	}
 	kind := objectMeta.Annotations["kwsk_action_kind"]
 	version := objectMeta.Annotations[KwskVersion]
-	code := objectMeta.Annotations["kwsk_action_code"]
+
+	var code string
+	var actionParams map[string]interface{}
+	configurationSpec := service.Spec.RunLatest.Configuration
+	for _, env := range configurationSpec.RevisionTemplate.Spec.Container.Env {
+		if env.Name == "KWSK_ACTION_CODE" {
+			code = env.Value
+		}
+		if env.Name == "KWSK_ACTION_PARAMS" {
+			err := json.Unmarshal([]byte(env.Value), &actionParams)
+			if err != nil {
+				fmt.Println("Failed to unmarshal action parameters:", err)
+			}
+		}
+	}
 
 	var params []*models.KeyValue
+	for key, value := range actionParams {
+		param := &models.KeyValue{
+			Key:   key,
+			Value: value,
+		}
+		params = append(params, param)
+	}
+
 	var annotations []*models.KeyValue
 	for key, value := range objectMeta.Annotations {
-		if strings.HasPrefix(key, "kwsk_action_param_") {
-			param := &models.KeyValue{
-				Key:   strings.TrimPrefix(key, "kwsk_action_param_"),
-				Value: value,
-			}
-			params = append(params, param)
-		}
 		if strings.HasPrefix(key, "kwsk_action_anno_") {
 			annotation := &models.KeyValue{
 				Key:   strings.TrimPrefix(key, "kwsk_action_anno_"),
@@ -260,19 +290,6 @@ type ActionRunMessage struct {
 	Value interface{} `json:"value"`
 }
 
-func getActionParameters(action *models.Action, params actions.InvokeActionParams) interface{} {
-	combinedParams := map[string]interface{}{}
-	for _, kv := range action.Parameters {
-		combinedParams[kv.Key] = kv.Value
-	}
-	if payloadMap, ok := params.Payload.(map[string]interface{}); ok {
-		for k, v := range payloadMap {
-			combinedParams[k] = v
-		}
-	}
-	return combinedParams
-}
-
 func withRoutesReady(knativeClient *knative.Clientset, service *v1alpha1.Service) (*v1alpha1.Service, error) {
 	// Wait for the service routes to be ready
 	readyTimeout := 5 * time.Minute
@@ -339,25 +356,16 @@ func invokeActionFunc(knativeClient *knative.Clientset, cache cache.Store) actio
 			return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
 		}
 		actionHost := service.Status.Domain
-		action := serviceToAction(service)
 		istioHostAndPort := istioHostAndPort()
 
-		// TODO: Don't init the action every time it's invoked
-		errResponder := initAction(istioHostAndPort, actionHost, action.Exec.Code)
-		if errResponder != nil {
-			return errResponder
-		}
-		return runAction(istioHostAndPort, actionHost, service.Name, namespace, getActionParameters(action, params), blocking, result, cache)
+		return runAction(istioHostAndPort, actionHost, service.Name, namespace, params.Payload, blocking, result, cache)
 	}
 }
 
-func initAction(istioHostAndPort string, actionHost string, actionCode string) middleware.Responder {
-	initBody := &ActionInitMessage{
-		Value: ActionInitValue{
-			Main: "main",
-			Code: actionCode,
-		},
-	}
+func runAction(istioHostAndPort string, actionHost string, name string, namespace string, params interface{}, blocking bool, result bool, cache cache.Store) middleware.Responder {
+
+	start := time.Now().UnixNano() / 1000000 // milliseconds since epoch
+
 	var resStatus int
 	var resBody []byte
 	var err error
@@ -365,7 +373,7 @@ func initAction(istioHostAndPort string, actionHost string, actionCode string) m
 	// Wait for the action to be ready
 	readyTimeout := 5 * time.Minute
 	err = wait.PollImmediate(1*time.Second, readyTimeout, func() (bool, error) {
-		resStatus, resBody, err = actionRequest(istioHostAndPort, actionHost, "init", initBody)
+		resStatus, resBody, err = actionRequest(istioHostAndPort, actionHost, "", params)
 		if err != nil {
 			fmt.Printf("Action not yet ready: %s\n", err)
 			return false, err
@@ -375,34 +383,6 @@ func initAction(istioHostAndPort string, actionHost string, actionCode string) m
 
 	if err != nil {
 		fmt.Printf("Error waiting on action to become ready: %s\n", err)
-		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessageFromErr(err))
-	}
-
-	if resStatus == http.StatusForbidden {
-		// ignore, since this is expected when we try to initialze an
-		// action multiple times
-	} else if resStatus != http.StatusOK {
-		msg := fmt.Sprintf("Error initializating action. Status: %d, Message: %s\n", resStatus, resBody)
-		errorMessage := &models.ErrorMessage{
-			Error: &msg,
-		}
-		fmt.Println(msg)
-		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessage)
-	}
-
-	return nil
-}
-
-func runAction(istioHostAndPort string, actionHost string, name string, namespace string, params interface{}, blocking bool, result bool, cache cache.Store) middleware.Responder {
-
-	start := time.Now().UnixNano() / 1000000 // milliseconds since epoch
-
-	runBody := &ActionRunMessage{
-		Value: params,
-	}
-	resStatus, resBody, err := actionRequest(istioHostAndPort, actionHost, "run", runBody)
-	if err != nil {
-		fmt.Printf("Error running action: %s\n", err)
 		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessageFromErr(err))
 	}
 
