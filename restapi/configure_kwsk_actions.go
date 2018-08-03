@@ -82,6 +82,7 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		name := params.ActionName
 		serviceName := sanitizeObjectName(name)
 		namespace := namespaceOrDefault(params.Namespace)
+		kind := params.Action.Exec.Kind
 		version := params.Action.Version
 		if version == "" {
 			version = "0.0.1"
@@ -100,7 +101,8 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		var image string
 		if params.Action.Exec != nil {
 			image = params.Action.Exec.Image
-			annotations["kwsk_action_kind"] = params.Action.Exec.Kind
+			annotations[KwskKind] = kind
+			annotations[KwskImage] = image
 		}
 
 		configSpec := v1alpha1.ConfigurationSpec{
@@ -111,9 +113,21 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		}
 
 		if image == "" {
-			// TODO: Map the kind of the action to an image instead of
-			// just assuming everything is node8
-			image = "bbrowning/kwsk-action-nodejs-v8"
+			prefix := imagePrefix()
+			tag := imageTag()
+			switch kind {
+			case "nodejs:default", "nodejs:6":
+				image = "kwsk-nodejs6action"
+			case "nodejs:8":
+				image = "kwsk-action-nodejs-v8"
+			case "python:default", "python:2":
+				image = "kwsk-python2action"
+			case "python:3":
+				image = "bbrowning/kwsk-python3action"
+			case "java:default", "java":
+				image = "kwsk-java8action"
+			}
+			image = fmt.Sprintf("%s/%s:%s", prefix, image, tag)
 		}
 
 		actionParamsMap := map[string]interface{}{}
@@ -178,8 +192,9 @@ func serviceToAction(service *v1alpha1.Service) *models.Action {
 	if name == "" {
 		name = objectMeta.Name
 	}
-	kind := objectMeta.Annotations["kwsk_action_kind"]
 	version := objectMeta.Annotations[KwskVersion]
+	kind := objectMeta.Annotations[KwskKind]
+	image := objectMeta.Annotations[KwskImage]
 
 	var code string
 	var actionParams map[string]interface{}
@@ -216,17 +231,19 @@ func serviceToAction(service *v1alpha1.Service) *models.Action {
 		}
 	}
 
+	publish := false
 	return &models.Action{
 		Name:      &name,
 		Namespace: &objectMeta.Namespace,
 		Version:   &version,
 		Exec: &models.ActionExec{
-			Image: service.Spec.RunLatest.Configuration.RevisionTemplate.Spec.Container.Image,
+			Image: image,
 			Kind:  kind,
 			Code:  code,
 		},
 		Parameters:  params,
 		Annotations: annotations,
+		Publish:     &publish,
 	}
 }
 
@@ -317,6 +334,7 @@ func withRoutesReady(knativeClient *knative.Clientset, service *v1alpha1.Service
 					break ServiceReady
 				} else {
 					fmt.Printf("Unexpected result type for service: %s", event.Object)
+					break ServiceReady
 				}
 			}
 		}

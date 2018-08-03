@@ -8,6 +8,9 @@ TESTDIR="$SCRIPTDIR/.."
 OWSK_HOME=$TESTDIR/openwhisk
 KWSK_PORT=8180
 
+IMAGE_PREFIX=${IMAGE_PREFIX:-"quay.io/bbrowning"}
+IMAGE_TAG=${IMAGE_TAG:-"latest"}
+
 if [ ! -d "$OWSK_HOME" ]; then
   git clone -b kwsk-tests --single-branch https://github.com/projectodd/incubator-openwhisk.git $OWSK_HOME
   cp $TESTDIR/etc/openwhisk-server-cert.pem $OWSK_HOME/ansible/roles/nginx/files/
@@ -35,7 +38,7 @@ else
   ISTIO=${NODE_IP}:${NODE_PORT}
 fi
 
-nohup go run $TESTDIR/../cmd/kwsk-server/main.go --port $KWSK_PORT --istio $ISTIO --write-timeout 180s >kwsk.log 2>&1 &
+nohup go run $TESTDIR/../cmd/kwsk-server/main.go --port $KWSK_PORT --istio $ISTIO --write-timeout 180s --image-prefix ${IMAGE_PREFIX} --image-tag ${IMAGE_TAG} >kwsk.log 2>&1 &
 KWSK_PID=$!
 
 pushd $OWSK_HOME

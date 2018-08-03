@@ -6,19 +6,18 @@ language: go
 
 env:
   global:
-matrix:
-  include:
-  - name: "Whisk Action Tests"
-    env: TESTS="system.basic.WskAction*"
-  - name: "Whisk Basic Rest Tests"
-    env: TESTS="system.basic.WskRest*"
-  allow_failures:
-  - env: TESTS="system.basic.WskRest*"
+  - IMAGE_PREFIX="quay.io/bbrowning"
+  - IMAGE_TAG="travis-latest"
+  - IMAGE_PUSH="true"
+  - DOCKER_USER=bbrowning+projectoddbot
+  - secure: "mrvm1SYxvJOX+YCeXXNKNtdIlDiruiWO51Oq54VFNvAu939+W0lqI5B0Q3pfLUqkaGuC69CJYAp1TOnr6b6ZtK+PEKl5dKUAOtW/YGHjrRymGxsRYBleCWcMQIIMKK0fNPz2OIxmRG6xSjs4VNl/McvaM/NU/w5mM9yTFJztow7u7ycmBzNDs4KLaKrKrv+50ibj0K3c9C3ZYM2MZvo6Fa5wKePHFn+OvnAO52k1RTsu7Op8fcx5QiQv+vIdG41SkWqeG65vsZZ1ccHvdPvofR/52LaoTY00nH7n3o20AEWiMk0uGhY8rmm0J5H7kScHY+izid/pgbhmyfdN7xBJPHxwcX0mVcf2NVvzeyoeJewbTMiCoCt6Kt58JwnvVofVhlU4/35tO15NlJ8DrU+vHx6mpQQfGcsKQ7BwpgDLvmWGEuNnESSAyVMgp0oSAH6N5HqZlj2yL1dXSnWPt6NVuuAbjFwtxoIJUpzgb666YZpU7NhZvlTBAMZsLsOKuYgW6A8tylNQ+fedSqbm09cg+oeAjVavZzU+f/nqvAbYGJxJsQ5MzVI8xEqD2qv3HCRq96CwFkqbhKefjv3SSOJa0RdeF1FjZqnW9LEGw5dkJ/lpCNEIPjIHGw+5YJcYSqdiaBTQKaT2qBua9jswfDceYAfrOoyjU16jAmN8i2ha5Lc="
 
 before_install:
 - sudo apt-get update -qq
 - curl -L -s https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 -o $GOPATH/bin/dep
 - chmod +x $GOPATH/bin/dep
+# Fetch go deps
+- dep ensure
 
 install:
 # Make root mounted as rshared to fix kube-dns issues.
@@ -33,8 +32,6 @@ install:
 - ./test/bin/kubeadm-dind-start.sh
 # Wait for Kubernetes to be up and ready.
 - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done
-# Fetch go deps
-- dep ensure
 # Install and configure knative
 - ./test/bin/knative-install.sh
 
@@ -45,3 +42,26 @@ after_failure:
 - echo "************* FAILURE *************"
 - cat kwsk.log
 - kubectl get all --all-namespaces -o wide
+
+jobs:
+  include:
+  - stage: build images
+    install: skip
+    script: ./test/bin/build-images.sh
+    after_failure: skip
+  - stage: test
+    env: TESTS="system.basic.WskAction*"
+    script: ./test/bin/integs.sh
+  - stage: test
+    env: TESTS="system.basic.WskRest*"
+    script: ./test/bin/integs.sh
+  # Only after tests pass do we rebuild and publish the images under
+  # the latest tag, and only for the runtime-shim branch
+  - stage: publish images
+    env: IMAGE_TAG="latest"
+    install: skip
+    script: ./test/bin/build-images.sh
+    after_failure: skip
+    if: branch = runtime-shim
+  allow_failures:
+    - env: TESTS="system.basic.WskRest*"

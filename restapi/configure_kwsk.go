@@ -32,9 +32,11 @@ import (
 //go:generate swagger generate server --target .. --name Kwsk --spec ../apiv1swagger.json --principal models.Principal
 
 var kwskFlags = struct {
-	Master     string `long:"master" description:"Kubernetes Master URL"`
-	Kubeconfig string `long:"kubeconfig" description:"Absolute path to the kubeconfig"`
-	Istio      string `long:"istio" description:"Host and port of Istio Ingress service"`
+	Master      string `long:"master" description:"Kubernetes Master URL"`
+	Kubeconfig  string `long:"kubeconfig" description:"Absolute path to the kubeconfig"`
+	Istio       string `long:"istio" description:"Host and port of Istio Ingress service"`
+	ImagePrefix string `long:"image-prefix" description:"Image prefix for action runtime images"`
+	ImageTag    string `long:"image-tag" description:"Image tag for action runtime images"`
 }{}
 
 func configureFlags(api *operations.KwskAPI) {
@@ -210,7 +212,25 @@ func istioHostAndPort() string {
 	return istioHostAndPort
 }
 
+func imagePrefix() string {
+	prefix := kwskFlags.ImagePrefix
+	if prefix == "" {
+		prefix = "quay.io/bbrowning"
+	}
+	return prefix
+}
+
+func imageTag() string {
+	tag := kwskFlags.ImageTag
+	if tag == "" {
+		tag = "latest"
+	}
+	return tag
+}
+
 const (
 	KwskName    string = "kwsk_name"
 	KwskVersion string = "kwsk_version"
+	KwskKind    string = "kwsk_kind"
+	KwskImage   string = "kwsk_image"
 )
