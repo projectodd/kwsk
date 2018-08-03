@@ -8,7 +8,7 @@ TESTDIR="$SCRIPTDIR/.."
 OWSK_HOME=$TESTDIR/openwhisk
 KWSK_PORT=8180
 
-IMAGE_PREFIX=${IMAGE_PREFIX:-"quay.io/bbrowning"}
+IMAGE_PREFIX=${IMAGE_PREFIX:-"projectodd"}
 IMAGE_TAG=${IMAGE_TAG:-"latest"}
 
 if [ ! -d "$OWSK_HOME" ]; then

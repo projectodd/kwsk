@@ -15,3 +15,7 @@
 vendor/
 /kwsk.log
 /test/openwhisk/
+
+# built kwsk-runtime-shim binaries
+cmd/kwsk-runtime-shim/kwsk-runtime-shim
+cmd/kwsk-runtime-shim/kwsk-runtime-shim.cgo

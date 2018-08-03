@@ -215,7 +215,7 @@ func istioHostAndPort() string {
 func imagePrefix() string {
 	prefix := kwskFlags.ImagePrefix
 	if prefix == "" {
-		prefix = "quay.io/bbrowning"
+		prefix = "projectodd"
 	}
 	return prefix
 }

@@ -4,10 +4,10 @@ FROM openwhisk/nodejs6action
 RUN sed -ie "s/8080/8081/" app.js
 
 # Add our new Golang server shim, which runs on port 8080
-COPY kwsk-runtime-shim .
+COPY kwsk-runtime-shim /usr/local/bin/
 
 # Add a little wrapper script that starts the shim and any other
 # command passed in its arguments
-COPY wrapper.sh .
+COPY kwsk-wrapper.sh /usr/local/bin/
 
-CMD /nodejsAction/wrapper.sh node --expose-gc app.js
+CMD kwsk-wrapper.sh node --expose-gc app.js

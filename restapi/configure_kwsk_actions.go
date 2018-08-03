@@ -123,7 +123,7 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 			case "python:default", "python:2":
 				image = "kwsk-python2action"
 			case "python:3":
-				image = "bbrowning/kwsk-python3action"
+				image = "kwsk-python3action"
 			case "java:default", "java":
 				image = "kwsk-java8action"
 			}
