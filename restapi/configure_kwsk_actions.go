@@ -3,7 +3,6 @@ package restapi
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -311,32 +310,18 @@ func withRoutesReady(knativeClient *knative.Clientset, service *v1alpha1.Service
 	// Wait for the service routes to be ready
 	readyTimeout := 5 * time.Minute
 	if !serviceRoutesReady(service) {
-		wi, err := knativeClient.ServingV1alpha1().Services(service.Namespace).Watch(metav1.ListOptions{
-			FieldSelector: fmt.Sprintf("metadata.name=%s", service.Name),
+		err := wait.Poll(1*time.Second, readyTimeout, func() (bool, error) {
+			newService, err := knativeClient.ServingV1alpha1().Services(service.Namespace).Get(service.Name, metav1.GetOptions{})
+			if err != nil {
+				fmt.Println("Error waiting for service route readiness: ", err)
+				return false, err
+			}
+			service = newService
+			return serviceRoutesReady(service), nil
 		})
 		if err != nil {
-			fmt.Println("Error wait for service route readiness: ", err)
+			fmt.Printf("Error waiting on service to become ready: %s\n", err)
 			return service, err
-		}
-		defer wi.Stop()
-		ch := wi.ResultChan()
-	ServiceReady:
-		for {
-			select {
-			case <-time.After(readyTimeout):
-				return service, errors.New("Timeout waiting for service route readiness")
-			case event := <-ch:
-				if newService, ok := event.Object.(*v1alpha1.Service); ok {
-					if !serviceRoutesReady(newService) {
-						continue
-					}
-					service = newService
-					break ServiceReady
-				} else {
-					fmt.Printf("Unexpected result type for service: %s", event.Object)
-					break ServiceReady
-				}
-			}
 		}
 	}
 	return service, nil

@@ -3,7 +3,6 @@ package restapi
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -247,32 +246,18 @@ func channelToTrigger(channel *v1alpha1.Channel) *models.Trigger {
 func withChannelReady(eventingClient *eventing.Clientset, channel *v1alpha1.Channel) (*v1alpha1.Channel, error) {
 	readyTimeout := 5 * time.Minute
 	if !channelReady(channel) {
-		wi, err := eventingClient.ChannelsV1alpha1().Channels(channel.Namespace).Watch(metav1.ListOptions{
-			FieldSelector: fmt.Sprintf("metadata.name=%s", channel.Name),
+		err := wait.Poll(1*time.Second, readyTimeout, func() (bool, error) {
+			newChannel, err := eventingClient.ChannelsV1alpha1().Channels(channel.Namespace).Get(channel.Name, metav1.GetOptions{})
+			if err != nil {
+				fmt.Println("Error waiting for channel readiness: ", err)
+				return false, err
+			}
+			channel = newChannel
+			return channelReady(channel), nil
 		})
 		if err != nil {
 			fmt.Println("Error waiting for channel readiness: ", err)
 			return channel, err
-		}
-		defer wi.Stop()
-		ch := wi.ResultChan()
-	ChannelReady:
-		for {
-			select {
-			case <-time.After(readyTimeout):
-				return channel, errors.New("Timeout waiting for channel readiness")
-			case event := <-ch:
-				if newChannel, ok := event.Object.(*v1alpha1.Channel); ok {
-					if !channelReady(newChannel) {
-						continue
-					}
-					channel = newChannel
-					break ChannelReady
-				} else {
-					msg := fmt.Sprintf("Unexpected result type for channel: %s", event.Object)
-					return channel, errors.New(msg)
-				}
-			}
 		}
 	}
 	return channel, nil
