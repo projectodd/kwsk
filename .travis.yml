@@ -56,12 +56,12 @@ jobs:
     env: TESTS="system.basic.WskRest*"
     script: ./test/bin/integs.sh
   # Only after tests pass do we rebuild and publish the images under
-  # the latest tag, and only for the runtime-shim branch
+  # the latest tag, and only for the master branch
   - stage: publish images
     env: IMAGE_TAG="latest"
     install: skip
     script: ./test/bin/build-images.sh
     after_failure: skip
-    if: branch = runtime-shim
+    if: branch = master
   allow_failures:
     - env: TESTS="system.basic.WskRest*"
