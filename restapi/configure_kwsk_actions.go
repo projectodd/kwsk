@@ -23,8 +23,6 @@ import (
 
 	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	knative "github.com/knative/serving/pkg/client/clientset/versioned"
-
-	"github.com/gofrs/uuid"
 )
 
 func configureActions(api *operations.KwskAPI, knativeClient *knative.Clientset, cache cache.Store) {
@@ -414,12 +412,11 @@ func runAction(istioHostAndPort string, actionHost string, name string, namespac
 		Status:  "success",
 	}
 
-	newUuid, err := uuid.NewV4()
+	activationId, err := newActivationId()
 	if err != nil {
 		fmt.Printf("Error generating activationId: %s\n", err)
 		return actions.NewInvokeActionInternalServerError().WithPayload(errorMessageFromErr(err))
 	}
-	activationId := newUuid.String()
 	logs := []string{}
 	annotations := []*models.KeyValue{}
 	end := time.Now().UnixNano() / 1000000 // milliseconds since epoch

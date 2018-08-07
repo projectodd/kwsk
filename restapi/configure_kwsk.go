@@ -15,6 +15,7 @@ import (
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
 	"github.com/go-openapi/swag"
+	"github.com/gofrs/uuid"
 	graceful "github.com/tylerb/graceful"
 
 	"github.com/projectodd/kwsk/models"
@@ -195,6 +196,14 @@ func errorMessageFromErr(err error) *models.ErrorMessage {
 	return &models.ErrorMessage{
 		Error: &msg,
 	}
+}
+
+func newActivationId() (string, error) {
+	newUuid, err := uuid.NewV4()
+	if err != nil {
+		return "", err
+	}
+	return strings.Replace(newUuid.String(), "-", "", -1), nil
 }
 
 func istioHostAndPort() string {
