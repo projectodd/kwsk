@@ -311,6 +311,11 @@ func withRoutesReady(knativeClient *knative.Clientset, service *v1alpha1.Service
 		err := wait.Poll(1*time.Second, readyTimeout, func() (bool, error) {
 			newService, err := knativeClient.ServingV1alpha1().Services(service.Namespace).Get(service.Name, metav1.GetOptions{})
 			if err != nil {
+				if k8sErrors.IsNotFound(err) {
+					// If not found then keep trying, assuming it will
+					// be found later
+					return false, nil
+				}
 				fmt.Println("Error waiting for service route readiness: ", err)
 				return false, err
 			}

@@ -249,6 +249,11 @@ func withChannelReady(eventingClient *eventing.Clientset, channel *v1alpha1.Chan
 		err := wait.Poll(1*time.Second, readyTimeout, func() (bool, error) {
 			newChannel, err := eventingClient.ChannelsV1alpha1().Channels(channel.Namespace).Get(channel.Name, metav1.GetOptions{})
 			if err != nil {
+				if k8sErrors.IsNotFound(err) {
+					// If not found then keep trying, assuming it will
+					// be found later
+					return false, nil
+				}
 				fmt.Println("Error waiting for channel readiness: ", err)
 				return false, err
 			}
