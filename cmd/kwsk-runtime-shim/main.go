@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +20,7 @@ var actionParams map[string]interface{}
 const (
 	KwskActionCode   string = "KWSK_ACTION_CODE"
 	KwskActionParams string = "KWSK_ACTION_PARAMS"
+	PrintLogs        bool   = false
 )
 
 type ActionInitMessage struct {
@@ -35,6 +37,9 @@ type ActionRunMessage struct {
 }
 
 func main() {
+	if !PrintLogs {
+		log.SetOutput(ioutil.Discard)
+	}
 	serverHostAndPort = "localhost:8081"
 	actionCode = os.Getenv(KwskActionCode)
 	if _, exists := os.LookupEnv(KwskActionParams); exists {
