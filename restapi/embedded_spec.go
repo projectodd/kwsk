@@ -1443,6 +1443,9 @@ func init() {
       },
       "post": {
         "description": "Fire a trigger",
+        "consumes": [
+          "application/json"
+        ],
         "tags": [
           "Triggers"
         ],
@@ -4274,6 +4277,9 @@ func init() {
       },
       "post": {
         "description": "Fire a trigger",
+        "consumes": [
+          "application/json"
+        ],
         "tags": [
           "Triggers"
         ],
