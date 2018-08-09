@@ -119,7 +119,17 @@ func fireTriggerFunc(servingClient *serving.Clientset, eventingClient *eventing.
 		fmt.Printf("Response: %+v\n", res)
 
 		if res.StatusCode == http.StatusAccepted {
-			return triggers.NewFireTriggerAccepted()
+			activationId, err := newActivationId()
+			if err != nil {
+				fmt.Printf("Error generating activationId: %s\n", err)
+				return triggers.NewFireTriggerInternalServerError().WithPayload(errorMessageFromErr(err))
+			}
+
+			payload := &models.ActivationID{
+				ActivationID: &activationId,
+			}
+
+			return triggers.NewFireTriggerAccepted().WithPayload(payload)
 		} else {
 			return triggers.NewFireTriggerInternalServerError()
 		}
