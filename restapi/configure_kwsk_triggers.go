@@ -82,7 +82,7 @@ func fireTriggerFunc(servingClient *serving.Clientset, eventingClient *eventing.
 		url := fmt.Sprintf("http://%s/", istioHostAndPort)
 		fmt.Printf("Sending POST to url %s with host %s\n", url, triggerHost)
 
-		body, err := json.Marshal(map[string]interface{}{})
+		body, err := json.Marshal(params.Payload)
 		if err != nil {
 			fmt.Printf("Error marshaling trigger request body: %s\n", err)
 			return triggers.NewFireTriggerInternalServerError()
