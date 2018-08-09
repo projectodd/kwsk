@@ -105,7 +105,9 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 		configSpec := v1alpha1.ConfigurationSpec{
 			RevisionTemplate: v1alpha1.RevisionTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{},
-				Spec:       v1alpha1.RevisionSpec{},
+				Spec: v1alpha1.RevisionSpec{
+					ConcurrencyModel: v1alpha1.RevisionRequestConcurrencyModelSingle,
+				},
 			},
 		}
 
