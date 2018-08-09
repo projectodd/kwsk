@@ -143,12 +143,22 @@ func getRuleByName(eventingClient *eventing.Clientset, name string, namespace st
 func subscriptionToRule(subscription *v1alpha1.Subscription) *models.Rule {
 	objectMeta := subscription.ObjectMeta
 	name := objectMeta.Annotations[KwskName]
+	if name == "" {
+		name = objectMeta.Name
+	}
 	version := objectMeta.Annotations[KwskVersion]
 	publish := false
 
 	triggerName := objectMeta.Annotations["kwsk_trigger_name"]
+	if triggerName == "" {
+		triggerName = subscription.Spec.Channel
+	}
 	triggerPath := objectMeta.Annotations["kwsk_trigger_path"]
+
 	actionName := objectMeta.Annotations["kwsk_action_name"]
+	if actionName == "" {
+		actionName = subscription.Spec.Subscriber
+	}
 	actionPath := objectMeta.Annotations["kwsk_action_path"]
 
 	return &models.Rule{

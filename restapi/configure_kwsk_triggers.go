@@ -231,6 +231,9 @@ func getTriggerByName(eventingClient *eventing.Clientset, name string, namespace
 func channelToTrigger(channel *v1alpha1.Channel) *models.Trigger {
 	objectMeta := channel.ObjectMeta
 	name := objectMeta.Annotations[KwskName]
+	if name == "" {
+		name = objectMeta.Name
+	}
 	version := objectMeta.Annotations[KwskVersion]
 	publish := false
 
