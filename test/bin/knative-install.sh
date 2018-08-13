@@ -4,6 +4,35 @@ set -x
 # One of release.yaml, release-lite.yaml, or release-no-mon.yaml
 KNATIVE_SERVING_FLAVOR=${KNATIVE_SERVING_FLAVOR:-release-no-mon.yaml}
 
+wait_for_pods() {
+  namespace=$1
+  timeout=600 # in seconds
+  interval=5  # in seconds
+  elapsed=0
+  passed=false
+  sleep $interval
+  until [ $elapsed -ge $timeout ]; do
+    kubectl get pods -n $namespace | grep -v -E "(Running|Completed|STATUS)"
+    exit_status=$?
+    if [ $exit_status -eq 1 ]; then
+      passed=true
+      break
+    fi
+
+    let elapsed=elapsed+$interval
+    sleep $interval
+  done
+  if [ "$passed" = false ]; then
+    echo "Failed to deploy pods in $namespace within $timeout seconds"
+    kubectl get pods -o wide -n $namespace
+    kubectl describe pods -n $namespace
+    kubectl get all --all-namespaces
+    kubectl describe node
+    kubectl get events
+    exit 1
+  fi
+}
+
 # install istio
 curl -L https://storage.googleapis.com/knative-releases/serving/latest/istio.yaml \
   | sed 's/LoadBalancer/NodePort/' \
@@ -14,32 +43,7 @@ kubectl label namespace istio-system istio-injection=disabled
 # label the default namespace with istio-injection=enabled.
 kubectl label namespace default istio-injection=enabled
 
-TIMEOUT=600 # in seconds
-INTERVAL=5  # in seconds
-
-ELAPSED=0
-PASSED=false
-sleep $INTERVAL
-until [ $ELAPSED -ge $TIMEOUT ]; do
-  kubectl get pods -n istio-system | grep -v -E "(Running|Completed|STATUS)"
-  EXIT_STATUS=$?
-  if [ $EXIT_STATUS -eq 1 ]; then
-    PASSED=true
-    break
-  fi
-
-  let ELAPSED=ELAPSED+$INTERVAL
-  sleep $INTERVAL
-done
-if [ "$PASSED" = false ]; then
-  echo "Failed to deploy Istio within $TIMEOUT seconds"
-  kubectl get pods -o wide -n istio-system
-  kubectl describe pods -n istio-system
-  kubectl get all --all-namespaces
-  kubectl describe node
-  kubectl get events
-  exit 1
-fi
+wait_for_pods "istio-system"
 
 
 # install knative
@@ -47,32 +51,12 @@ curl -L https://storage.googleapis.com/knative-releases/serving/latest/${KNATIVE
   | sed 's/LoadBalancer/NodePort/' \
   | kubectl apply -f -
 
-ELAPSED=0
-PASSED=false
-sleep $INTERVAL
-until [ $ELAPSED -ge $TIMEOUT ]; do
-  kubectl get pods -n knative-serving | grep -v -E "(Running|Completed|STATUS)"
-  EXIT_STATUS=$?
-  if [ $EXIT_STATUS -eq 1 ]; then
-    PASSED=true
-    break
-  fi
-
-  let ELAPSED=ELAPSED+$INTERVAL
-  sleep $INTERVAL
-done
-if [ "$PASSED" = false ]; then
-  echo "Failed to deploy Knative within $TIMEOUT seconds"
-  kubectl get pods -o wide -n knative-serving
-  kubectl describe pods -n knative-serving
-  kubectl get all --all-namespaces
-  kubectl describe node
-  kubectl get events
-  exit 1
-fi
+wait_for_pods "knative-serving"
 
 # install knative eventing
 kubectl apply -f https://storage.googleapis.com/knative-releases/eventing/latest/release.yaml
+wait_for_pods "knative-eventing"
+
 # and the stub bus
 kubectl apply -f https://storage.googleapis.com/knative-releases/eventing/latest/release-bus-stub.yaml
 kubectl apply -f https://storage.googleapis.com/knative-releases/eventing/latest/release-clusterbus-stub.yaml
