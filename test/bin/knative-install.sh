@@ -1,6 +1,9 @@
 #!/bin/bash
 set -x
 
+# One of release.yaml, release-lite.yaml, or release-no-mon.yaml
+KNATIVE_SERVING_FLAVOR=${KNATIVE_SERVING_FLAVOR:-release-no-mon.yaml}
+
 # install istio
 curl -L https://storage.googleapis.com/knative-releases/serving/latest/istio.yaml \
   | sed 's/LoadBalancer/NodePort/' \
@@ -40,7 +43,7 @@ fi
 
 
 # install knative
-curl -L https://storage.googleapis.com/knative-releases/serving/latest/release-no-mon.yaml \
+curl -L https://storage.googleapis.com/knative-releases/serving/latest/${KNATIVE_SERVING_FLAVOR} \
   | sed 's/LoadBalancer/NodePort/' \
   | kubectl apply -f -
 
