@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +26,13 @@ import (
 	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
 	knative "github.com/knative/serving/pkg/client/clientset/versioned"
 )
+
+// Copied from upstream Exec.scala
+var base64Pattern = regexp.MustCompile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$")
+
+func isBase64(s string) bool {
+	return (len(s)%4 == 0) && base64Pattern.MatchString(s)
+}
 
 func configureActions(api *operations.KwskAPI, knativeClient *knative.Clientset, cache cache.Store) {
 	api.ActionsDeleteActionHandler = actions.DeleteActionHandlerFunc(deleteActionFunc(knativeClient))
@@ -145,6 +154,10 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 				Value: params.Action.Exec.Code,
 			},
 			corev1.EnvVar{
+				Name:  "KWSK_ACTION_BINARY",
+				Value: strconv.FormatBool(isBase64(params.Action.Exec.Code)),
+			},
+			corev1.EnvVar{
 				Name:  "KWSK_ACTION_PARAMS",
 				Value: string(actionParamsJson),
 			},
@@ -196,11 +209,15 @@ func serviceToAction(service *v1alpha1.Service) *models.Action {
 	image := objectMeta.Annotations[KwskImage]
 
 	var code string
+	var binary bool
 	var actionParams map[string]interface{}
 	configurationSpec := service.Spec.RunLatest.Configuration
 	for _, env := range configurationSpec.RevisionTemplate.Spec.Container.Env {
 		if env.Name == "KWSK_ACTION_CODE" {
 			code = env.Value
+		}
+		if env.Name == "KWSK_ACTION_BINARY" {
+			binary, _ = strconv.ParseBool(env.Value)
 		}
 		if env.Name == "KWSK_ACTION_PARAMS" {
 			err := json.Unmarshal([]byte(env.Value), &actionParams)
@@ -236,9 +253,10 @@ func serviceToAction(service *v1alpha1.Service) *models.Action {
 		Namespace: &objectMeta.Namespace,
 		Version:   &version,
 		Exec: &models.ActionExec{
-			Image: image,
-			Kind:  kind,
-			Code:  code,
+			Image:  image,
+			Kind:   kind,
+			Code:   code,
+			Binary: binary,
 		},
 		Parameters:  params,
 		Annotations: annotations,
