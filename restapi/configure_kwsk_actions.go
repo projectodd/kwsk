@@ -311,19 +311,6 @@ func getAllActionsFunc(knativeClient *knative.Clientset) actions.GetAllActionsHa
 	}
 }
 
-type ActionInitMessage struct {
-	Value ActionInitValue `json:"value,omitempty"`
-}
-
-type ActionInitValue struct {
-	Main string `json:"main,omitempty"`
-	Code string `json:"code,omitempty"`
-}
-
-type ActionRunMessage struct {
-	Value interface{} `json:"value"`
-}
-
 func withRoutesReady(knativeClient *knative.Clientset, service *v1alpha1.Service) (*v1alpha1.Service, error) {
 	// Wait for the service routes to be ready
 	readyTimeout := 5 * time.Minute
