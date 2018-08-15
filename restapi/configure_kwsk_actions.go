@@ -162,6 +162,13 @@ func updateActionFunc(knativeClient *knative.Clientset) actions.UpdateActionHand
 				Value: string(actionParamsJson),
 			},
 		}
+		if len(params.Action.Exec.Main) > 0 {
+			containerEnv = append(containerEnv, corev1.EnvVar{
+				Name:  "KWSK_ACTION_MAIN",
+				Value: params.Action.Exec.Main,
+			})
+		}
+
 		container := corev1.Container{
 			Image: image,
 			Env:   containerEnv,
@@ -210,6 +217,7 @@ func serviceToAction(service *v1alpha1.Service) *models.Action {
 
 	var code string
 	var binary bool
+	var main string
 	var actionParams map[string]interface{}
 	configurationSpec := service.Spec.RunLatest.Configuration
 	for _, env := range configurationSpec.RevisionTemplate.Spec.Container.Env {
@@ -218,6 +226,9 @@ func serviceToAction(service *v1alpha1.Service) *models.Action {
 		}
 		if env.Name == "KWSK_ACTION_BINARY" {
 			binary, _ = strconv.ParseBool(env.Value)
+		}
+		if env.Name == "KWSK_ACTION_MAIN" {
+			main = env.Value
 		}
 		if env.Name == "KWSK_ACTION_PARAMS" {
 			err := json.Unmarshal([]byte(env.Value), &actionParams)
@@ -257,6 +268,7 @@ func serviceToAction(service *v1alpha1.Service) *models.Action {
 			Kind:   kind,
 			Code:   code,
 			Binary: binary,
+			Main:   main,
 		},
 		Parameters:  params,
 		Annotations: annotations,

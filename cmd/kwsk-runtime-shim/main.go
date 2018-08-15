@@ -9,18 +9,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"sync/atomic"
 )
 
 var initialized int32
 var serverHostAndPort string
 var actionCode string
-var actionBinary string
+var actionBinary bool
+var actionMain string
 var actionParams map[string]interface{}
 
 const (
 	KwskActionCode   string = "KWSK_ACTION_CODE"
 	KwskActionBinary string = "KWSK_ACTION_BINARY"
+	KwskActionMain   string = "KWSK_ACTION_MAIN"
 	KwskActionParams string = "KWSK_ACTION_PARAMS"
 	PrintLogs        bool   = false
 )
@@ -32,7 +35,7 @@ type ActionInitMessage struct {
 type ActionInitValue struct {
 	Main   string `json:"main,omitempty"`
 	Code   string `json:"code,omitempty"`
-	Binary string `json:"binary,omitempty"`
+	Binary bool   `json:"binary,omitempty"`
 }
 
 type ActionRunMessage struct {
@@ -45,7 +48,11 @@ func main() {
 	}
 	serverHostAndPort = "localhost:8081"
 	actionCode = os.Getenv(KwskActionCode)
-	actionBinary = os.Getenv(KwskActionBinary)
+	actionBinary, _ = strconv.ParseBool(os.Getenv(KwskActionBinary))
+	actionMain = os.Getenv(KwskActionMain)
+	if actionMain == "" {
+		actionMain = "main"
+	}
 	if _, exists := os.LookupEnv(KwskActionParams); exists {
 		err := json.Unmarshal([]byte(os.Getenv(KwskActionParams)), &actionParams)
 		if err != nil {
@@ -65,7 +72,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		log.Println("Initializing action")
 		initBody := &ActionInitMessage{
 			Value: ActionInitValue{
-				Main:   "main",
+				Main:   actionMain,
 				Code:   actionCode,
 				Binary: actionBinary,
 			},
