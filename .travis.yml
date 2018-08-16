@@ -23,7 +23,7 @@ install:
 # Make root mounted as rshared to fix kube-dns issues.
 - sudo mount --make-rshared /
 # Download kubeadm-dind-cluster script
-- curl -Lo dind-cluster.sh https://cdn.rawgit.com/kubernetes-sigs/kubeadm-dind-cluster/master/fixed/dind-cluster-v1.10.sh && chmod +x dind-cluster.sh && sudo mv dind-cluster.sh /usr/local/bin/
+- curl -Lo dind-cluster.sh https://cdn.rawgit.com/kubernetes-sigs/kubeadm-dind-cluster/master/fixed/dind-cluster-v1.11.sh && chmod +x dind-cluster.sh && sudo mv dind-cluster.sh /usr/local/bin/
 # Tell kubeadm-dind-cluster where to put kubectl
 - export KUBECTL_DIR="${HOME}/.kubeadm-dind-cluster"
 # Add Kubectl directory to the PATH.

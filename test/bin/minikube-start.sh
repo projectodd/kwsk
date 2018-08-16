@@ -1,6 +1,6 @@
 #!/bin/bash
 
-K8S_VERSION=${K8S_VERSION:-v1.10.5}
+K8S_VERSION=${K8S_VERSION:-v1.11.2}
 VM_DRIVER=${VM_DRIVER:-kvm2}
 BOOTSTRAPPER=${BOOTSTRAPPER:-kubeadm}
 MINIKUBE_MEMORY=${MINIKUBE_MEMORY:-8192}
@@ -18,4 +18,4 @@ exec minikube start --memory=$MINIKUBE_MEMORY --cpus=$MINIKUBE_CPUS \
      --bootstrapper=$BOOTSTRAPPER \
      --extra-config=controller-manager.cluster-signing-cert-file="/var/lib/localkube/certs/ca.crt" \
      --extra-config=controller-manager.cluster-signing-key-file="/var/lib/localkube/certs/ca.key" \
-     --extra-config=apiserver.admission-control="DenyEscalatingExec,LimitRanger,NamespaceExists,NamespaceLifecycle,ResourceQuota,ServiceAccount,DefaultStorageClass,MutatingAdmissionWebhook"
+     --extra-config=apiserver.enable-admission-plugins="DenyEscalatingExec,LimitRanger,NamespaceExists,NamespaceLifecycle,ResourceQuota,ServiceAccount,DefaultStorageClass,MutatingAdmissionWebhook"

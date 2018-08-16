@@ -14,7 +14,7 @@ export EXTRA_PORTS="32380:32380"
 # # Add the required cluster config for Knative serving
 # export CONTROLLER_MANAGER_cluster_signing_cert_file="/var/lib/localkube/certs/ca.crt"
 # export CONTROLLER_MANAGER_cluster_signing_key_file="/var/lib/localkube/certs/ca.key"
-export API_SERVER_admission_controller="DenyEscalatingExec,LimitRanger,NamespaceExists,NamespaceLifecycle,ResourceQuota,ServiceAccount,DefaultStorageClass,MutatingAdmissionWebhook"
+export API_SERVER_enable_admission_plugins="DenyEscalatingExec,LimitRanger,NamespaceExists,NamespaceLifecycle,ResourceQuota,ServiceAccount,DefaultStorageClass,MutatingAdmissionWebhook"
 
 # Not sure if this is needed, but why not
 bash -x dind-cluster.sh clean
