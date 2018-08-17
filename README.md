@@ -54,9 +54,12 @@ Or via the `wsk` CLI like:
     wsk action list
     wsk action get hello
     wsk action invoke hello -r -p name world
-    (Note: The command above will fail the first time but should work if you repeat it)
     
     kubectl logs $(kubectl get pod | grep hello.*deployment | awk '{print $1}') -c user-container
+
+    wsk action create jello test/etc/action.jar --main Hello
+    wsk action create pello test/etc/action-python.zip --kind=python:default
+    wsk action create zippy test/etc/action-nodejs.zip --kind=nodejs:default
 
 ### Automated testing
 
