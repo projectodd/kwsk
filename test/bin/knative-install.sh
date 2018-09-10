@@ -34,9 +34,7 @@ wait_for_pods() {
 }
 
 # install istio
-curl -L https://storage.googleapis.com/knative-releases/serving/latest/istio.yaml \
-  | sed 's/LoadBalancer/NodePort/' \
-  | kubectl apply -f -
+kubectl apply -f https://storage.googleapis.com/knative-releases/serving/latest/istio.yaml
 
 # Don't try to inject in the istio-system namespace
 kubectl label namespace istio-system istio-injection=disabled
@@ -47,9 +45,7 @@ wait_for_pods "istio-system"
 
 
 # install knative
-curl -L https://storage.googleapis.com/knative-releases/serving/latest/${KNATIVE_SERVING_FLAVOR} \
-  | sed 's/LoadBalancer/NodePort/' \
-  | kubectl apply -f -
+kubectl apply -f https://storage.googleapis.com/knative-releases/serving/latest/${KNATIVE_SERVING_FLAVOR}
 
 wait_for_pods "knative-serving"
 
@@ -65,3 +61,7 @@ kubectl apply -f https://storage.googleapis.com/knative-releases/eventing/latest
 
 set +x
 echo "Knative successfully installed!"
+
+echo "If you're running minikube, you'll need to run these commands, too:"
+echo "  sudo ip route add \$(cat ~/.minikube/profiles/minikube/config.json | jq -r ".KubernetesConfig.ServiceCIDR") via \$(minikube ip)"
+echo "  kubectl run minikube-lb-patch --replicas=1 --image=elsonrodriguez/minikube-lb-patch:0.1 --namespace=kube-system"
